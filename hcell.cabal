@@ -1,0 +1,73 @@
+name:                hcell
+version:             0.1.0.0
+synopsis:            Initial project template from stack
+description:         Please see README.md
+homepage:            https://github.com/drhodes/hcell#readme
+license:             BSD3
+license-file:        LICENSE
+author:              Derek Rhodes
+maintainer:          physci@gmail.com
+copyright:           No.
+category:            Yes.
+build-type:          Simple
+-- extra-source-files:
+cabal-version:       >=1.10
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     Lib
+                       Grid
+                       Types
+                       Universe
+                       LifeForm
+                       Draw
+                       Loc
+                       Program
+                       
+  build-depends:       base >= 4.7 && < 5
+                     , containers >= 0.5.6.2
+                     , hashable >= 1.2.4.0
+                     , linear >= 1.20.5
+                     , linear >= 1.20.5
+                     , mwc-random >= 0.13.4.0
+                     , random >= 1.1
+                     , sdl2 >= 2.1.2.1
+                     , vector >= 0.11.0.0
+  default-language:    Haskell2010
+
+executable hcell-exe
+  hs-source-dirs:      app
+  main-is:             Main.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  build-depends:       base
+                     , containers >= 0.5.6.2
+                     , hashable >= 1.2.4.0
+                     , hcell
+                     , linear >= 1.20.5
+                     , linear >= 1.20.5
+                     , mwc-random >= 0.13.4.0
+                     , random >= 1.1
+                     , sdl2 >= 2.1.2.1
+                     , vector >= 0.11.0.0
+  default-language:    Haskell2010
+
+test-suite hcell-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  build-depends:       base
+                     , containers >= 0.5.6.2
+                     , hashable >= 1.2.4.0
+                     , hcell
+                     , linear >= 1.20.5
+                     , linear >= 1.20.5
+                     , mwc-random >= 0.13.4.0
+                     , random >= 1.1
+                     , sdl2 >= 2.1.2.1
+                     , vector >= 0.11.0.0
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/drhodes/hcell
