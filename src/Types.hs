@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE FlexibleInstances #-}
 module Types where
 
@@ -5,6 +7,35 @@ import qualified Data.Map as DM
 import qualified Data.Set as DS
 import qualified Data.Vector as DV
 import qualified System.Random as Random
+import Control.Monad
+import Control.Monad.State
+import Control.Monad.Trans.Except
+import Data.Functor.Identity
+import Control.Monad.Except
+
+type Run b = forall m. ( MonadState CellState m,
+                         MonadError String m ) => m b
+
+runStateExceptT :: s -> ExceptT e (StateT s m) a -> m (Either e a, s)
+runStateExceptT s = flip runStateT s . runExceptT
+
+runExceptStateT :: s -> StateT s (ExceptT e m) a -> m (Either e (a, s))
+runExceptStateT s = runExceptT . flip runStateT s
+
+
+
+data CellState = CellState { csRand :: Random.StdGen                             
+                           }
+
+type CS a = State CellState a
+
+newCS = CellState (Random.mkStdGen (fromIntegral 0))
+
+foo :: CS ()
+foo = do
+  put newCS
+  return ()
+
 
 class Mass a where
   mass :: a -> Integer
@@ -52,7 +83,7 @@ instance Mass Grid where
   mass (Grid g _) = sum $ map mass (DM.elems g)
 
 -- transporters are one way paths.
--- send grids can't overlap recv grids.
+-- send grids can't overlap recv grids in space.
 data Transporter = Send Grid
                  | Recv Grid
 

@@ -1,4 +1,2 @@
 stack clean
-trash *~
-trash src/*~
-trash app/*~
+find . -type f -name "*~" -delete

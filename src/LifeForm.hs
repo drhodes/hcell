@@ -50,7 +50,6 @@ moveRandom (Simple lid loc prog grid gen) =
   in Simple lid (Loc.toDir dir loc) prog grid gen'
 
 
-
 step lf@(Simple lid loc code grid seed) =
   let inst = Program.curInstruction code
       code' = Program.rotate code

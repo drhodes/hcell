@@ -32,5 +32,4 @@ addLifeForm grid@(Grid cells size) (Simple _ offset code gridLf _) =
 addLifeForms :: Foldable t => Grid -> t LifeForm -> Grid
 addLifeForms grid = foldl addLifeForm grid
 
-
 numCells (Grid _ (Size w h)) = w * h

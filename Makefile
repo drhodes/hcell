@@ -15,7 +15,7 @@ clean: ## clean all the things
 	-sh clean.sh
 
 work: ## open all files in editor
-	emacs -nw app/*.hs src/*.hs Makefile
+	emacs -nw app/*.hs src/*.hs Makefile *.cabal
 
 setup:
 	touch battle-plan.org
@@ -26,7 +26,6 @@ add: clean ## add files to the git repo
 
 commit: ## git commit -a
 	git commit -a
-
 
 # http://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 .PHONY: help
