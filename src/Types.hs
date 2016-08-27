@@ -4,7 +4,7 @@
 module Types where
 
 import qualified Data.Map as DM
-import qualified Data.Set as DS
+import qualified Data.Set.Monad as DSM
 import qualified Data.Vector as DV
 import qualified System.Random as Random
 import Control.Monad
@@ -13,28 +13,32 @@ import Control.Monad.Trans.Except
 import Data.Functor.Identity
 import Control.Monad.Except
 
-type Run b = forall m. ( MonadState CellState m,
-                         MonadError String m ) => m b
+type HCell b = forall m. ( MonadState CellState m,
+                           MonadError String m ) => m b
 
-runStateExceptT :: s -> ExceptT e (StateT s m) a -> m (Either e a, s)
-runStateExceptT s = flip runStateT s . runExceptT
+-- runStateExceptT :: s -> ExceptT e (StateT s m) a -> m (Either e a, s)
+-- runStateExceptT s = flip runStateT s . runExceptT
 
-runExceptStateT :: s -> StateT s (ExceptT e m) a -> m (Either e (a, s))
+runExceptStateT :: s -> StateT s (ExceptT String m) a -> m (Either String (a, s))
 runExceptStateT s = runExceptT . flip runStateT s
 
+data CellState = CellState { csRand :: Random.StdGen
+                           , csNonce :: Integer
+                           } deriving (Show)
 
 
-data CellState = CellState { csRand :: Random.StdGen                             
-                           }
+---runHCell :: s -> Control.Monad.Trans.Except.ExceptT e (Control.Monad.Trans.State.Lazy.StateT s m) a -> m (Either e a, s)
 
-type CS a = State CellState a
 
-newCS = CellState (Random.mkStdGen (fromIntegral 0))
+runHCell :: s -> StateT s (ExceptT String m) a -> m (Either String (a, s))
+runHCell f x = runExceptStateT f x
 
-foo :: CS ()
-foo = do
-  put newCS
-  return ()
+newCS :: CellState
+newCS = CellState (Random.mkStdGen (fromIntegral 0)) 0
+
+runCellState :: Monad m => HCell a -> m (Either String (a, CellState))
+runCellState = runHCell newCS
+
 
 
 class Mass a where
@@ -90,11 +94,11 @@ data Transporter = Send Grid
 data Universe = Universe { uGrid :: Grid
                          , uSize :: Size
                          , uTime :: Integer
-                         , uLifeForms :: DS.Set LifeForm
-                         } 
+                         , uLifeForms :: DSM.Set LifeForm
+                         } deriving (Show)
 
 instance Mass Universe where
-  mass (Universe _ _ _ lifeForms) = sum $ DS.map mass lifeForms
+  mass (Universe _ _ _ lifeForms) = sum $ DSM.map mass lifeForms
 
 data Orientation = TopBottom { topOffset :: Integer
                              , bottomOffset :: Integer
@@ -115,7 +119,6 @@ data LifeForm = Complex Loc Program Joint LifeForm LifeForm
                        , simpleLoc :: Loc
                        , simpleProg :: Program
                        , simpleGrid :: Grid
-                       , simpleSeed :: Random.StdGen
                        } deriving (Show)
 
 instance Ord LifeForm where
@@ -127,11 +130,11 @@ instance Eq LifeForm where
 
 
 lifeFormGrid (Complex _ _ _ lf1 lf2) = lifeFormGrid lf1 ++ lifeFormGrid lf2
-lifeFormGrid (Simple _ _ _ g _) = [g]
+lifeFormGrid (Simple _ _ _ g) = [g]
                          
 instance Mass LifeForm where
   mass (Complex _ _ j lf1 lf2) = mass j + mass lf1 + mass lf2
-  mass (Simple _ _ _ g _) = mass g
+  mass (Simple _ _ _ g) = mass g
 
 class Draw a where
   draw :: a -> IO ()

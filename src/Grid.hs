@@ -23,7 +23,7 @@ offsetGrid (Grid cells _) size@(Size w h) dx dy =
   in Grid (DM.fromList offsetCells) size
 
 -- will need to do collision detection here.
-addLifeForm grid@(Grid cells size) (Simple _ offset code gridLf _) = 
+addLifeForm grid@(Grid cells size) (Simple _ offset code gridLf) = 
   let (Loc dx dy) = offset
       (Grid cellsLf _) = offsetGrid gridLf size dx dy
       augmentedGrid = Grid (DM.union cellsLf cells) size

@@ -1,3 +1,6 @@
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE FlexibleContexts #-}
+
 module Main where
 
 import           Control.Monad
@@ -8,30 +11,57 @@ import           Types
 import qualified Universe
 import qualified Display
 
-algea lid = LifeForm.new lid (Loc 5 5) (Program.new [MoveRandom]) ["*"]
-amoeba lid x y = LifeForm.new lid (Loc x y) (Program.new [MoveRandom]) [ "**" ]
 
-amoebas = [amoeba x 25 25 | x <- [0 .. 40]]
 
-stepN u = do
+algea :: HCell LifeForm
+algea = LifeForm.new (Loc 5 5) (Program.new [MoveRandom]) ["*"]
+
+-- amoeba :: _ -> _ -> HCell LifeForm
+-- amoeba x y = LifeForm.new (Loc x y) (Program.new [MoveRandom]) [ "**" ]
+
+-- amoebas = mapM amoeba [amoeba x 25 25 | x <- [0 .. 40]]
+
+stepN :: Universe -> CellState -> IO ()
+stepN u cs = do
   n <- liftM (\str -> read str :: Integer) getLine
-  let f i u' = if i == 0
-               then step u'
-               else do f (i - 1) (Universe.step u')
-  f n u
-
-
-step u = do
+  let f :: Integer -> Universe -> CellState -> IO ()
+      f i u' cs' =
+        if i == 0
+        then step u' cs'
+        else do result <- runHCell cs' (Universe.step u')
+                case result of
+                  Left errmsg -> print errmsg
+                  Right (u'', cs'') -> f (i - 1) u'' cs''
+  f n u cs
+  
+step :: Universe -> CellState -> IO ()
+step u cs = do
   draw u
   c <- getLine
   case c of
     "q" -> return ()
-    "s" -> stepN u
-    _ -> step (Universe.step u)
-
+    "s" -> stepN u cs
+    _ -> do result <- runHCell cs (Universe.step u)
+            case result of
+              Left errmsg -> putStrLn errmsg
+              Right (u', cs') -> step u' cs'
   
 -- main = let u = (Universe.new (Size 50 50))
 --            u' = foldl Universe.addLifeForm u $ amoebas
 --        in step u'
-main = Display.mainLoop   
+
+newU = Universe.new (Size 50 50)
+
+
+main :: IO ()
+main = do
+  Right (lf, cs) <- runHCell newCS algea
+  let u = Universe.addLifeForm newU lf
+  step u cs
+  return ()
+--   -- pass it off to Display, or lift Display into it.
+--   -- Display.mainLoop   
+--   -- putStrLn "done"
+
+
   

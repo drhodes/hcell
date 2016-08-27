@@ -1,14 +1,24 @@
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE FlexibleContexts #-}
 module Universe where
 
 import qualified Data.Map as DM
-import qualified Data.Set as DS
 import qualified Grid
-import Types
 import qualified LifeForm
+import           Types
+import qualified Data.Set.Monad as DSM
+import Control.Monad
 
-new size = Universe (Grid.new size) size 0 (DS.empty)
+new size = Universe (Grid.new size) size 0 (DSM.empty)
 
-addLifeForm uv@(Universe _ _ _ lfs) lf = uv { uLifeForms = DS.insert lf lfs }
+addLifeForm uv@(Universe _ _ _ lfs) lf = uv { uLifeForms = DSM.insert lf lfs }
 
-step (Universe g s t lfs) = Universe g s (t+1) (DS.map LifeForm.step lfs)
-  
+
+step :: Universe -> HCell Universe
+step (Universe g s t lfs) = do
+  let xs = DSM.toList lfs
+  -- this conversion to from set to list back to set is sad
+  -- reason why sets can't find Ord instance for (Monad Lifeform)
+  -- hrm. maybe a better way to do it.
+  lfs' <- sequence $ map LifeForm.step xs 
+  return $ Universe g s (t+1) (DSM.fromList lfs')
