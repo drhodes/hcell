@@ -57,10 +57,9 @@ main :: IO ()
 main = do
   Right (lf, cs) <- runHCell newCS algea
   let u = Universe.addLifeForm newU lf
-  step u cs
-  return ()
+  --step u cs
 --   -- pass it off to Display, or lift Display into it.
---   -- Display.mainLoop   
+  Display.mainLoop u cs
 --   -- putStrLn "done"
 
 

@@ -7,6 +7,7 @@
 module Display (mainLoop) where
 
 import Prelude hiding (init)
+import qualified Data.Set.Monad as DSM
 import Control.Applicative
 import Control.Monad
 import Data.Monoid
@@ -15,6 +16,8 @@ import Linear
 import Linear.Affine ( Point(P) )
 import qualified SDL
 import SDL (($=))
+import Types
+import qualified Universe
 
 -- #if !MIN_VERSION_base(4,8,0)    
 -- import Data.Foldable
@@ -23,8 +26,19 @@ import SDL (($=))
 screenWidth, screenHeight :: CInt
 (screenWidth, screenHeight) = (640, 640)
 
-mainLoop :: IO ()
-mainLoop = do
+step :: Universe -> CellState -> IO (Universe, CellState, Loc)
+step u cs = do
+  result <- runHCell cs (Universe.step u)
+  case result of
+    Left errmsg -> do putStrLn errmsg
+                      return (u, cs, Loc 1 1)
+    Right (u', cs') -> do
+      let lfs = uLifeForms u'          
+      return (u', cs', simpleLoc $ head $ take 1 (DSM.toList lfs))
+
+
+mainLoop :: Universe -> CellState -> IO ()
+mainLoop uv cellState = do
   SDL.initialize [ SDL.InitVideo ]
 
   let winConfig = SDL.defaultWindow {
@@ -32,10 +46,18 @@ mainLoop = do
 
   window <- SDL.createWindow "hcell" winConfig
   renderer <- SDL.createRenderer window (-1) SDL.defaultRenderer
+
+  let tileSize = 4
+  let smidge = 2
   
-  let loop x = do
-        let square1 = SDL.Rectangle (P (V2 x 20)) (V2 20 20)
-        let square2 = SDL.Rectangle (P (V2 (x+2) 22)) (V2 16 16)
+  let loop u cs = do
+        (u', cs', Loc x' y') <- step u cs
+        let x = tileSize * fromIntegral x'
+        let y = tileSize * fromIntegral y'
+        print (x, y)
+        let square1 = SDL.Rectangle (P (V2 x y)) (V2 tileSize tileSize)
+        let foo = tileSize - smidge * 2
+        let square2 = SDL.Rectangle (P (V2 (x+2 :: CInt) (y+2 :: CInt))) (V2 foo foo)
         events <- SDL.pollEvents
         let (Any quit, Last newSpriteRect) =
               foldMap (\case
@@ -66,9 +88,9 @@ mainLoop = do
         SDL.fillRect renderer (Just square2)
         SDL.present renderer
 
-        unless quit $ loop (0 `mod` 640)
-
-  loop 0
+        unless quit $ loop u' cs'
+        
+  loop uv cellState
 
   SDL.destroyRenderer renderer
   SDL.destroyWindow window
