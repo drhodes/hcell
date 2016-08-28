@@ -3,10 +3,14 @@ watch: ## build
 	stack build --file-watch 
 
 build:
-	stack build
+	#stack build --ghc-options -threaded --ghc-options -eventlog --ghc-options -rtsopts
+	stack build --ghc-options -threaded --ghc-options -rtsopts
+
+run-profile:
+	stack exec hcell-exe -- +RTS -ls -N7
 
 run:
-	stack exec hcell-exe
+	stack exec hcell-exe -- +RTS -N7
 
 test: ## test
 	echo test

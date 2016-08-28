@@ -10,57 +10,25 @@ import qualified Program
 import           Types
 import qualified Universe
 import qualified Display
+import qualified Util
 
-
-
-algea :: HCell LifeForm
-algea = LifeForm.new (Loc 5 5) (Program.new [MoveRandom]) ["*"]
-
--- amoeba :: _ -> _ -> HCell LifeForm
--- amoeba x y = LifeForm.new (Loc x y) (Program.new [MoveRandom]) [ "**" ]
-
--- amoebas = mapM amoeba [amoeba x 25 25 | x <- [0 .. 40]]
-
-stepN :: Universe -> CellState -> IO ()
-stepN u cs = do
-  n <- liftM (\str -> read str :: Integer) getLine
-  let f :: Integer -> Universe -> CellState -> IO ()
-      f i u' cs' =
-        if i == 0
-        then step u' cs'
-        else do result <- runHCell cs' (Universe.step u')
-                case result of
-                  Left errmsg -> print errmsg
-                  Right (u'', cs'') -> f (i - 1) u'' cs''
-  f n u cs
-  
-step :: Universe -> CellState -> IO ()
-step u cs = do
-  draw u
-  c <- getLine
-  case c of
-    "q" -> return ()
-    "s" -> stepN u cs
-    _ -> do result <- runHCell cs (Universe.step u)
-            case result of
-              Left errmsg -> putStrLn errmsg
-              Right (u', cs') -> step u' cs'
-  
--- main = let u = (Universe.new (Size 50 50))
---            u' = foldl Universe.addLifeForm u $ amoebas
---        in step u'
+algea :: Dir -> HCell LifeForm
+algea d = do
+  x' <- Util.randomInt
+  y' <- Util.randomInt
+  let x = fromIntegral $ x' `mod` 100
+      y = fromIntegral $ y' `mod` 100
+  LifeForm.new (Loc x y) (Program.new [ MoveRandom , Move d ]) ["*"]
 
 newU = Universe.new (Size 50 50)
 
-
 main :: IO ()
 main = do
-  Right (lf, cs) <- runHCell newCS algea
-  let u = Universe.addLifeForm newU lf
-  --step u cs
---   -- pass it off to Display, or lift Display into it.
+  Right (lf1, cs) <- runHCell newCS (replicateM 100 (algea N))
+  Right (lf2, cs) <- runHCell newCS (replicateM 100 (algea E))
+  
+  let u = foldl Universe.addLifeForm newU (lf1 ++ lf2)
   Display.mainLoop u cs
---   -- putStrLn "done"
 
 
   

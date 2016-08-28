@@ -22,3 +22,10 @@ step (Universe g s t lfs) = do
   -- hrm. maybe a better way to do it.
   lfs' <- sequence $ map LifeForm.step xs 
   return $ Universe g s (t+1) (DSM.fromList lfs')
+
+
+stepN n u@(Universe g s t lfs) = do
+  if n <= 0
+    then return u
+    else do u' <- step u
+            stepN (n-1) u'

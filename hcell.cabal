@@ -14,6 +14,7 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 library
+  ghc-options:         -threaded -eventlog -rtsopts 
   hs-source-dirs:      src
   exposed-modules:     Lib
                        Grid
@@ -33,6 +34,7 @@ library
                      , linear >= 1.20.5
                      , mtl >= 2.2.1
                      , mwc-random >= 0.13.4.0
+                     , parallel >= 3.2.1.0
                      , random >= 1.1
                      , sdl2 >= 2.1.2.1
                      , set-monad >= 0.2.0.0
@@ -52,6 +54,7 @@ executable hcell-exe
                      , linear >= 1.20.5
                      , mtl >= 2.2.1
                      , mwc-random >= 0.13.4.0
+                     , parallel >= 3.2.1.0
                      , random >= 1.1
                      , sdl2 >= 2.1.2.1
                      , set-monad >= 0.2.0.0
@@ -71,6 +74,7 @@ test-suite hcell-test
                      , linear >= 1.20.5
                      , mtl >= 2.2.1
                      , mwc-random >= 0.13.4.0
+                     , parallel >= 3.2.1.0
                      , random >= 1.1
                      , sdl2 >= 2.1.2.1
                      , set-monad >= 0.2.0.0

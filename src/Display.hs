@@ -18,24 +18,46 @@ import qualified SDL
 import SDL (($=))
 import Types
 import qualified Universe
+import qualified Control.Parallel.Strategies as CPS
 
--- #if !MIN_VERSION_base(4,8,0)    
--- import Data.Foldable
--- #endif
+
+#if !MIN_VERSION_base(4,8,0)    
+import Data.Foldable
+#endif
 
 screenWidth, screenHeight :: CInt
-(screenWidth, screenHeight) = (640, 640)
+(screenWidth, screenHeight) = (800, 800)
 
-step :: Universe -> CellState -> IO (Universe, CellState, Loc)
-step u cs = do
-  result <- runHCell cs (Universe.step u)
+gray3 = V4 0x3A 0x3A 0x3A 0xFF
+gray7 = V4 0x7A 0x7A 0x7A 0xFF 
+gray9 = V4 0x9A 0x9A 0x9A 0xFF
+
+step :: Integer -> Universe -> CellState -> IO (Universe, CellState, [LifeForm])
+step n u cs = do
+  result <- runHCell cs (Universe.stepN n u)
   case result of
     Left errmsg -> do putStrLn errmsg
-                      return (u, cs, Loc 1 1)
+                      return (u, cs, [])
     Right (u', cs') -> do
       let lfs = uLifeForms u'          
-      return (u', cs', simpleLoc $ head $ take 1 (DSM.toList lfs))
+      return (u', cs', DSM.toList lfs)
 
+-- these will go into a State value.
+tileSize = 2
+smidge = 2
+
+renderLifeForm renderer lf = do
+  let (Loc x' y') = simpleLoc lf
+  let x = tileSize * fromIntegral x' `mod` screenWidth
+  let y = tileSize * fromIntegral y' `mod` screenHeight
+  let square1 = SDL.Rectangle (P (V2 x y)) (V2 tileSize tileSize)
+  let foo = tileSize - smidge * 2
+  let square2 = SDL.Rectangle (P (V2 (x+2 :: CInt) (y+2 :: CInt))) (V2 foo foo)
+  
+  -- SDL.rendererDrawColor renderer $= gray7
+  SDL.fillRect renderer (Just square1)
+  -- SDL.rendererDrawColor renderer $= gray9
+  -- SDL.fillRect renderer (Just square2)
 
 mainLoop :: Universe -> CellState -> IO ()
 mainLoop uv cellState = do
@@ -46,18 +68,9 @@ mainLoop uv cellState = do
 
   window <- SDL.createWindow "hcell" winConfig
   renderer <- SDL.createRenderer window (-1) SDL.defaultRenderer
-
-  let tileSize = 4
-  let smidge = 2
   
   let loop u cs = do
-        (u', cs', Loc x' y') <- step u cs
-        let x = tileSize * fromIntegral x'
-        let y = tileSize * fromIntegral y'
-        print (x, y)
-        let square1 = SDL.Rectangle (P (V2 x y)) (V2 tileSize tileSize)
-        let foo = tileSize - smidge * 2
-        let square2 = SDL.Rectangle (P (V2 (x+2 :: CInt) (y+2 :: CInt))) (V2 foo foo)
+        (u', cs', lfs) <- step 1 u cs
         events <- SDL.pollEvents
         let (Any quit, Last newSpriteRect) =
               foldMap (\case
@@ -65,27 +78,15 @@ mainLoop uv cellState = do
                 SDL.KeyboardEvent e ->
                   if | SDL.keyboardEventKeyMotion e == SDL.Pressed ->
                          case SDL.keysymScancode (SDL.keyboardEventKeysym e) of
-                           -- SDL.Scancode1 -> (Any False, Last (Just spriteOne))
-                           -- SDL.Scancode2 -> (Any False, Last (Just spriteTwo))
-                           -- SDL.Scancode3 -> (Any False, Last (Just spriteThree))
-                           -- SDL.Scancode4 -> (Any False, Last (Just spriteFour))
                            SDL.ScancodeQ -> (Any True,  mempty)
                            _ -> mempty
                      | otherwise -> mempty
                 _ -> mempty) $
               map SDL.eventPayload events
-            
-            --spriteRect' = newSpriteRect <|> spriteRect
-        let gray3 = V4 0x3A 0x3A 0x3A 0xFF
-        let gray7 = V4 0x7A 0x7A 0x7A 0xFF 
-        let gray9 = V4 0x9A 0x9A 0x9A 0xFF
-       
         SDL.rendererDrawColor renderer $= gray3
         SDL.clear renderer
         SDL.rendererDrawColor renderer $= gray7
-        SDL.fillRect renderer (Just square1)
-        SDL.rendererDrawColor renderer $= gray9
-        SDL.fillRect renderer (Just square2)
+        mapM (renderLifeForm renderer) lfs
         SDL.present renderer
 
         unless quit $ loop u' cs'
