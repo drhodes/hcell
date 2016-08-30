@@ -19,7 +19,7 @@ import SDL (($=))
 import Types
 import qualified Universe
 import qualified Control.Parallel.Strategies as CPS
-
+import Color
 
 #if !MIN_VERSION_base(4,8,0)    
 import Data.Foldable
@@ -27,10 +27,6 @@ import Data.Foldable
 
 screenWidth, screenHeight :: CInt
 (screenWidth, screenHeight) = (800, 800)
-
-gray3 = V4 0x3A 0x3A 0x3A 0xFF
-gray7 = V4 0x7A 0x7A 0x7A 0xFF 
-gray9 = V4 0x9A 0x9A 0x9A 0xFF
 
 step :: Integer -> Universe -> CellState -> IO (Universe, CellState, [LifeForm])
 step n u cs = do
@@ -43,8 +39,8 @@ step n u cs = do
       return (u', cs', DSM.toList lfs)
 
 -- these will go into a State value.
-tileSize = 2
-smidge = 2
+tileSize = 8
+smidge = 1
 
 renderLifeForm renderer lf = do
   let (Loc x' y') = simpleLoc lf
@@ -52,12 +48,12 @@ renderLifeForm renderer lf = do
   let y = tileSize * fromIntegral y' `mod` screenHeight
   let square1 = SDL.Rectangle (P (V2 x y)) (V2 tileSize tileSize)
   let foo = tileSize - smidge * 2
-  let square2 = SDL.Rectangle (P (V2 (x+2 :: CInt) (y+2 :: CInt))) (V2 foo foo)
+  let square2 = SDL.Rectangle (P (V2 (x+smidge :: CInt) (y+smidge :: CInt))) (V2 foo foo)
   
-  -- SDL.rendererDrawColor renderer $= gray7
+  SDL.rendererDrawColor renderer $= gray1
   SDL.fillRect renderer (Just square1)
-  -- SDL.rendererDrawColor renderer $= gray9
-  -- SDL.fillRect renderer (Just square2)
+  SDL.rendererDrawColor renderer $= cellBlue
+  SDL.fillRect renderer (Just square2)
 
 mainLoop :: Universe -> CellState -> IO ()
 mainLoop uv cellState = do
@@ -69,7 +65,7 @@ mainLoop uv cellState = do
   window <- SDL.createWindow "hcell" winConfig
   renderer <- SDL.createRenderer window (-1) SDL.defaultRenderer
   
-  let loop u cs = do
+  let loop frameNumber u cs = do
         (u', cs', lfs) <- step 1 u cs
         events <- SDL.pollEvents
         let (Any quit, Last newSpriteRect) =
@@ -83,16 +79,20 @@ mainLoop uv cellState = do
                      | otherwise -> mempty
                 _ -> mempty) $
               map SDL.eventPayload events
-        SDL.rendererDrawColor renderer $= gray3
+        SDL.rendererDrawColor renderer $= grayD
         SDL.clear renderer
-        SDL.rendererDrawColor renderer $= gray7
+        --SDL.rendererDrawColor renderer $= gray7
         mapM (renderLifeForm renderer) lfs
         SDL.present renderer
 
-        unless quit $ loop u' cs'
+        unless quit $ (if frameNumber `mod` 5 == 0
+                       then loop (frameNumber+1) u' cs'
+                       else loop (frameNumber+1) u cs)
         
-  loop uv cellState
+  loop 0 uv cellState
 
   SDL.destroyRenderer renderer
   SDL.destroyWindow window
   SDL.quit
+
+

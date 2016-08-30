@@ -1,7 +1,11 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module Grid where
 
 import qualified Data.Map as DM
 import qualified Data.Set as DS
+import qualified Data.Vector as DVi
+import qualified Loc
 import Types
 
 new size =
@@ -23,9 +27,9 @@ offsetGrid (Grid cells _) size@(Size w h) dx dy =
   in Grid (DM.fromList offsetCells) size
 
 -- will need to do collision detection here.
-addLifeForm grid@(Grid cells size) (Simple _ offset code gridLf) = 
-  let (Loc dx dy) = offset
-      (Grid cellsLf _) = offsetGrid gridLf size dx dy
+addLifeForm grid@(Grid cells size) Simple{..} = --offset code gridLf) = 
+  let (Loc dx dy) = simpleLoc
+      (Grid cellsLf _) = offsetGrid simpleGrid size dx dy
       augmentedGrid = Grid (DM.union cellsLf cells) size
   in augmentedGrid
 
@@ -33,3 +37,34 @@ addLifeForms :: Foldable t => Grid -> t LifeForm -> Grid
 addLifeForms grid = foldl addLifeForm grid
 
 numCells (Grid _ (Size w h)) = w * h
+getCellAt (Grid cells _) loc = DM.lookup loc cells
+
+hasNeighbor grid loc =
+  case getCellAt grid loc of
+    Nothing -> False
+    Just EmptyCell -> False
+    _ -> True
+
+-- 1 2 3
+-- 4 5 6
+-- 7 8 9
+
+toDisplayBlock :: Grid -> Loc -> DisplayBlock
+toDisplayBlock grid loc =
+  let nbrs = [ Loc.toNorth $ Loc.toWest loc
+             , Loc.toNorth loc
+             , Loc.toNorth $ Loc.toEast loc
+             , Loc.toWest loc
+             , Loc.toEast loc
+             , Loc.toSouth $ Loc.toWest loc
+             , Loc.toSouth loc
+             , Loc.toSouth $ Loc.toEast loc
+             ]
+      gotNbrs = map (hasNeighbor grid) nbrs
+      shards = [D1, D2, D3, D4, D6, D7, D8, D9]      
+  in Dblock [shard | (b, shard) <- zip gotNbrs shards, b]
+  
+-- toDisplayBlocks :: Grid -> DV.Vector DisplayBlock
+-- toDisplayBlocks (Grid cells size) =
+--   DM.
+

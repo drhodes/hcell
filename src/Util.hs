@@ -18,8 +18,6 @@ import Data.Functor.Identity
 import Control.Monad.Except
 
 
-
-
 randomInt :: HCell Int
 randomInt = do
   cs <- get
@@ -34,4 +32,4 @@ nextNonce = do
   let n = csNonce cs
   put cs{csNonce = n + 1}
   return n
-
+  

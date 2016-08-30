@@ -13,7 +13,6 @@ new size = Universe (Grid.new size) size 0 (DSM.empty)
 
 addLifeForm uv@(Universe _ _ _ lfs) lf = uv { uLifeForms = DSM.insert lf lfs }
 
-
 step :: Universe -> HCell Universe
 step (Universe g s t lfs) = do
   let xs = DSM.toList lfs
@@ -22,7 +21,6 @@ step (Universe g s t lfs) = do
   -- hrm. maybe a better way to do it.
   lfs' <- sequence $ map LifeForm.step xs 
   return $ Universe g s (t+1) (DSM.fromList lfs')
-
 
 stepN n u@(Universe g s t lfs) = do
   if n <= 0

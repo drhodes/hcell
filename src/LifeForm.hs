@@ -20,14 +20,9 @@ new loc@(Loc x y) code pattern = do
   let g = buildLifeFormGrid pattern
       x' = fromIntegral y
       y' = fromIntegral y
-  return $ Simple lid loc code g
+  return $ Simple lid loc code g 0
 
 addLifeForm uv@(Universe _ _ _ lfs) lf = uv { uLifeForms = DSM.insert lf lfs }
-
-temp = [ "..."
-       , "..."
-       , "..."
-       ] 
 
 buildCell x y char =
   let loc = Loc x y
@@ -54,13 +49,15 @@ moveRandom s@Simple{..} = do
   return $ s{simpleLoc = Loc.toDir d simpleLoc}
 
 step :: LifeForm -> HCell LifeForm
-step lf@(Simple lid loc code grid) = do
+step lf@(Simple lid loc code grid age) = do
   let inst = Program.curInstruction code
       code' = Program.rotate code
+      age' = age - 1
   case inst of
-    Move dir -> return $ Simple lid (Loc.toDir dir loc) code' grid 
-    NOP -> return $ Simple lid loc code' grid 
+    Move dir -> return $ Simple lid (Loc.toDir dir loc) code' grid age'
+    NOP -> return $ Simple lid loc code' grid age'
     MoveRandom -> do lf' <- moveRandom lf
-                     return $ lf'{simpleProg = code'}
-    _ -> return lf
+                     return $ lf'{simpleProg = code'}{simpleAge = age'}
+    _ -> return $ lf{simpleProg = code'}{simpleAge = age'}
+
 

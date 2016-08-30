@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE RecordWildCards #-}
 module Types where
 
 import qualified Data.Map as DM
@@ -119,6 +120,7 @@ data LifeForm = Complex Loc Program Joint LifeForm LifeForm
                        , simpleLoc :: Loc
                        , simpleProg :: Program
                        , simpleGrid :: Grid
+                       , simpleAge :: Integer                       
                        } deriving (Show)
 
 instance Ord LifeForm where
@@ -130,13 +132,20 @@ instance Eq LifeForm where
 
 
 lifeFormGrid (Complex _ _ _ lf1 lf2) = lifeFormGrid lf1 ++ lifeFormGrid lf2
-lifeFormGrid (Simple _ _ _ g) = [g]
+lifeFormGrid Simple{..} = [simpleGrid]
                          
 instance Mass LifeForm where
   mass (Complex _ _ j lf1 lf2) = mass j + mass lf1 + mass lf2
-  mass (Simple _ _ _ g) = mass g
+  mass Simple{..} = mass simpleGrid
 
 class Draw a where
   draw :: a -> IO ()
 
+-- 1 2 3
+-- 4 5 6
+-- 7 8 9
+
+data DisplayShard = D1 | D2 | D3 | D4 | D6 | D7 | D8 | D9
+
+data DisplayBlock = Dblock [DisplayShard]
 
