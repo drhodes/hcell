@@ -13,6 +13,7 @@ new size =
       cells = DM.fromList [(Loc x y, EmptyCell) | x <- [0 .. w], y <- [0 .. h]]
   in Grid cells size      
 
+
 contains :: Grid -> Loc -> Bool
 contains (Grid _ (Size w h)) (Loc x y) = x < w && y < h
 
@@ -73,5 +74,8 @@ toDisplayGrid grid@(Grid cells size) =
   let keys = DM.keys cells
       cellBlocks = map (toDisplayBlock grid) keys
   in DisplayGrid (DM.fromList $ zip keys cellBlocks) size
+
+
+
 
 

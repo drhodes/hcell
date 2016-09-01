@@ -16,41 +16,63 @@ algea :: Dir -> HCell LifeForm
 algea d = do
   x' <- Util.randomInt
   y' <- Util.randomInt
-  let x = fromIntegral $ x' `mod` 100
-      y = fromIntegral $ y' `mod` 100
+  let x = fromIntegral $ x' `mod` 1
+      y = fromIntegral $ y' `mod` 1
   LifeForm.new (Loc x y) (Program.new [ MoveRandom , Move d ]) ["*"]
 
 amoeba :: HCell LifeForm
 amoeba = do
   x' <- Util.randomInt
   y' <- Util.randomInt
-  let x = fromIntegral $ x' `mod` 100
-      y = fromIntegral $ y' `mod` 100
-  LifeForm.new (Loc x y) (Program.new [ MoveRandom ]) [ "**"
-                                                      , ".*"]
+  let x = fromIntegral $ x' `mod` 1
+      y = fromIntegral $ y' `mod` 1
+  LifeForm.new (Loc x y) (Program.new [ MoveRandom
+                                      , NOP
+                                      ]) [ "**"
+                                         , ".*"]
 
-uBeast :: HCell LifeForm
-uBeast = do
+blob :: HCell LifeForm
+blob = do
   x' <- Util.randomInt
   y' <- Util.randomInt
-  let x = fromIntegral $ x' `mod` 100
-      y = fromIntegral $ y' `mod` 100
-  LifeForm.new (Loc x y) (Program.new [ MoveRandom ]) [ "*.*"
-                                                      , "*.*"
-                                                      , "***"
-                                                      ]
+  let x = fromIntegral $ x' `mod` 1
+      y = fromIntegral $ y' `mod` 1
+  LifeForm.new (Loc x y) (Program.new [ MoveRandom
+                                      , NOP
+                                      ]) [ "**"
+                                         , "**"]
+
+
+beast :: HCell LifeForm
+beast = do
+  x' <- Util.randomInt
+  y' <- Util.randomInt
+  let x = fromIntegral $ x' `mod` 1
+      y = fromIntegral $ y' `mod` 1
+      prog = Program.new [ MoveRandom, NOP, NOP, NOP]
+      prog' = head $ drop (x' `mod` 4) $ iterate Program.rotate prog
+  LifeForm.new (Loc x y) prog' [ "*.*"
+                               , "*.*"
+                               , "***"
+                               ]
 
 
 newU = Universe.new (Size 50 50)
 
+
+buildCritters = do
+  x <- replicateM 10 $ algea N
+  y <- replicateM 10 beast
+  z <- replicateM 10 amoeba
+  w <- replicateM 10 blob
+  return $ concat [x, y, z, w]
+
 main :: IO ()
 main = do
-  Right (lf1, cs) <- runHCell newCS (replicateM 10 (algea N))
-  Right (uBeasts, cs') <- runHCell cs (replicateM 10 uBeast)
-  Right (amoebas, cs'') <- runHCell cs' (replicateM 10 amoeba) 
+  Right (critters, cs) <- runHCell newCS buildCritters
   
-  let u = foldl Universe.addLifeForm newU (lf1 ++ uBeasts ++ amoebas)
-  Display.mainLoop u cs''
+  let u = foldl Universe.addLifeForm newU critters
+  Display.mainLoop u cs
   
 
 

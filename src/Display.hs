@@ -24,7 +24,7 @@ import qualified Data.Map as DM
 import qualified Loc
 
 screenWidth, screenHeight :: CInt
-(screenWidth, screenHeight) = (400, 400)
+(screenWidth, screenHeight) = (1024, 1024)
 
 step :: Integer -> Universe -> CellState -> IO (Universe, CellState, [LifeForm])
 step n u cs = do
@@ -37,8 +37,8 @@ step n u cs = do
       return (u', cs', DSM.toList lfs)
 
 -- these will go into a State value.
-tileSize = 8
-smidge = 1
+tileSize = 16
+smidge = 2
 
 renderLifeForm renderer lf = do
   let (DisplayGrid dgrid _) = Grid.toDisplayGrid (simpleGrid lf)
@@ -55,7 +55,7 @@ renderDisplayBlock renderer offset (loc@(Loc x' y'), Dblock cellType shards) =
               let x = (tileSize * fromIntegral x'' `mod` screenWidth) 
               let y = (tileSize * fromIntegral y'' `mod` screenHeight)
               let square1 = SDL.Rectangle (P (V2 x y)) (V2 tileSize tileSize)
-              SDL.rendererDrawColor renderer $= gray1
+              SDL.rendererDrawColor renderer $= gray4
               SDL.fillRect renderer (Just square1)
               mapM_ (renderShard renderer gray7 loc') shards
       else return () -- this could seem like a BUG! ALERT
@@ -66,7 +66,6 @@ renderDisplayBlock _ _ _ = return ()
 -- 1 2 3
 -- 4 5 6 
 -- 7 8 9      
-
 renderShard :: SDL.Renderer -> t -> Loc -> DisplayShard -> IO ()
 renderShard renderer color (Loc x' y') shard = do
   let (dx, dy) = case shard of
@@ -114,7 +113,7 @@ mainLoop uv cellState = do
         mapM (renderLifeForm renderer) lfs
         SDL.present renderer
 
-        unless quit $ (if frameNumber `mod` 500 == 0
+        unless quit $ (if frameNumber `mod` 1 == 0
                        then loop (frameNumber+1) u' cs'
                        else loop (frameNumber+1) u cs)
         
