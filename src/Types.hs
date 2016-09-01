@@ -84,6 +84,16 @@ data Grid = Grid { gridCells :: DM.Map Loc CellType
                  , gridSize :: Size
                  } deriving (Show, Eq, Ord)
 
+data DisplayShard = D1 | D2 | D3 | D4 | D5 | D6 | D7 | D8 | D9
+                  deriving(Show, Eq, Ord)
+data DisplayBlock = Dblock CellType [DisplayShard]
+                  | EmptyDblock
+                    deriving (Show, Eq, Ord)
+data DisplayGrid = DisplayGrid { dgridCells :: DM.Map Loc DisplayBlock
+                               , dgridSize :: Size
+                               } deriving (Show, Eq, Ord)
+
+
 instance Mass Grid where
   mass (Grid g _) = sum $ map mass (DM.elems g)
 
@@ -145,7 +155,4 @@ class Draw a where
 -- 4 5 6
 -- 7 8 9
 
-data DisplayShard = D1 | D2 | D3 | D4 | D6 | D7 | D8 | D9
-
-data DisplayBlock = Dblock [DisplayShard]
 

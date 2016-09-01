@@ -52,7 +52,7 @@ step :: LifeForm -> HCell LifeForm
 step lf@(Simple lid loc code grid age) = do
   let inst = Program.curInstruction code
       code' = Program.rotate code
-      age' = age - 1
+      age' = age + 1
   case inst of
     Move dir -> return $ Simple lid (Loc.toDir dir loc) code' grid age'
     NOP -> return $ Simple lid loc code' grid age'

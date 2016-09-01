@@ -20,15 +20,38 @@ algea d = do
       y = fromIntegral $ y' `mod` 100
   LifeForm.new (Loc x y) (Program.new [ MoveRandom , Move d ]) ["*"]
 
+amoeba :: HCell LifeForm
+amoeba = do
+  x' <- Util.randomInt
+  y' <- Util.randomInt
+  let x = fromIntegral $ x' `mod` 100
+      y = fromIntegral $ y' `mod` 100
+  LifeForm.new (Loc x y) (Program.new [ MoveRandom ]) [ "**"
+                                                      , ".*"]
+
+uBeast :: HCell LifeForm
+uBeast = do
+  x' <- Util.randomInt
+  y' <- Util.randomInt
+  let x = fromIntegral $ x' `mod` 100
+      y = fromIntegral $ y' `mod` 100
+  LifeForm.new (Loc x y) (Program.new [ MoveRandom ]) [ "*.*"
+                                                      , "*.*"
+                                                      , "***"
+                                                      ]
+
+
 newU = Universe.new (Size 50 50)
 
 main :: IO ()
 main = do
-  Right (lf1, cs) <- runHCell newCS (replicateM 100 (algea N))
-  Right (lf2, cs) <- runHCell newCS (replicateM 100 (algea E))
+  Right (lf1, cs) <- runHCell newCS (replicateM 10 (algea N))
+  Right (uBeasts, cs') <- runHCell cs (replicateM 10 uBeast)
+  Right (amoebas, cs'') <- runHCell cs' (replicateM 10 amoeba) 
   
-  let u = foldl Universe.addLifeForm newU (lf1 ++ lf2)
-  Display.mainLoop u cs
+  let u = foldl Universe.addLifeForm newU (lf1 ++ uBeasts ++ amoebas)
+  Display.mainLoop u cs''
+  
 
 
   

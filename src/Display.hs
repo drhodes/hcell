@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RecordWildCards #-}
@@ -20,13 +19,12 @@ import Types
 import qualified Universe
 import qualified Control.Parallel.Strategies as CPS
 import Color
-
-#if !MIN_VERSION_base(4,8,0)    
-import Data.Foldable
-#endif
+import qualified Grid
+import qualified Data.Map as DM
+import qualified Loc
 
 screenWidth, screenHeight :: CInt
-(screenWidth, screenHeight) = (800, 800)
+(screenWidth, screenHeight) = (400, 400)
 
 step :: Integer -> Universe -> CellState -> IO (Universe, CellState, [LifeForm])
 step n u cs = do
@@ -43,17 +41,48 @@ tileSize = 8
 smidge = 1
 
 renderLifeForm renderer lf = do
-  let (Loc x' y') = simpleLoc lf
-  let x = tileSize * fromIntegral x' `mod` screenWidth
-  let y = tileSize * fromIntegral y' `mod` screenHeight
-  let square1 = SDL.Rectangle (P (V2 x y)) (V2 tileSize tileSize)
-  let foo = tileSize - smidge * 2
-  let square2 = SDL.Rectangle (P (V2 (x+smidge :: CInt) (y+smidge :: CInt))) (V2 foo foo)
-  
-  SDL.rendererDrawColor renderer $= gray1
-  SDL.fillRect renderer (Just square1)
+  let (DisplayGrid dgrid _) = Grid.toDisplayGrid (simpleGrid lf)
+      dblocks = DM.toList dgrid
+      offset = simpleLoc lf
+  mapM (renderDisplayBlock renderer offset) dblocks
+
+renderDisplayBlock renderer offset (loc@(Loc x' y'), Dblock cellType shards) =
+  case cellType of
+    EmptyCell -> return ()
+    LifeCell -> 
+      if cellType == LifeCell
+      then do let loc'@(Loc x'' y'') = Loc.add loc offset
+              let x = (tileSize * fromIntegral x'' `mod` screenWidth) 
+              let y = (tileSize * fromIntegral y'' `mod` screenHeight)
+              let square1 = SDL.Rectangle (P (V2 x y)) (V2 tileSize tileSize)
+              SDL.rendererDrawColor renderer $= gray1
+              SDL.fillRect renderer (Just square1)
+              mapM_ (renderShard renderer gray7 loc') shards
+      else return () -- this could seem like a BUG! ALERT
+           
+renderDisplayBlock _ _ _ = return ()
+
+
+-- 1 2 3
+-- 4 5 6 
+-- 7 8 9      
+
+renderShard :: SDL.Renderer -> t -> Loc -> DisplayShard -> IO ()
+renderShard renderer color (Loc x' y') shard = do
+  let (dx, dy) = case shard of
+        D2 -> (smidge, -smidge)
+        D6 -> (smidge*2, smidge)
+        D4 -> (0, smidge)
+        D8 -> (smidge, smidge*2)
+        _ -> (smidge, smidge)
+  let x = (tileSize * fromIntegral x' `mod` screenWidth) + dx
+  let y = (tileSize * fromIntegral y' `mod` screenHeight) + dy
+  let w = tileSize - (smidge * 2)
+  let square2 = SDL.Rectangle (P (V2 (x :: CInt) (y :: CInt))) (V2 w w)
+
   SDL.rendererDrawColor renderer $= cellBlue
   SDL.fillRect renderer (Just square2)
+
 
 mainLoop :: Universe -> CellState -> IO ()
 mainLoop uv cellState = do
@@ -85,7 +114,7 @@ mainLoop uv cellState = do
         mapM (renderLifeForm renderer) lfs
         SDL.present renderer
 
-        unless quit $ (if frameNumber `mod` 5 == 0
+        unless quit $ (if frameNumber `mod` 500 == 0
                        then loop (frameNumber+1) u' cs'
                        else loop (frameNumber+1) u cs)
         

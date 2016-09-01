@@ -9,6 +9,8 @@ toEast (Loc x y) = Loc (x+1) y
 toWest (Loc x y) = Loc (x-1) y
 toSouth (Loc x y) = Loc x (y+1)
 
+add (Loc x y) (Loc x' y') = Loc (x + x') (y + y')
+
 toDir d loc =
   case d of
     N -> toNorth loc

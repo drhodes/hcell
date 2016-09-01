@@ -62,9 +62,16 @@ toDisplayBlock grid loc =
              ]
       gotNbrs = map (hasNeighbor grid) nbrs
       shards = [D1, D2, D3, D4, D6, D7, D8, D9]      
-  in Dblock [shard | (b, shard) <- zip gotNbrs shards, b]
-  
--- toDisplayBlocks :: Grid -> DV.Vector DisplayBlock
--- toDisplayBlocks (Grid cells size) =
---   DM.
+  in let block = case getCellAt grid loc of
+           Nothing -> EmptyDblock
+           Just EmptyCell -> EmptyDblock
+           Just LifeCell -> Dblock LifeCell (D5:[shard | (b, shard) <- zip gotNbrs shards, b])
+     in block
+
+toDisplayGrid :: Grid -> DisplayGrid
+toDisplayGrid grid@(Grid cells size) =
+  let keys = DM.keys cells
+      cellBlocks = map (toDisplayBlock grid) keys
+  in DisplayGrid (DM.fromList $ zip keys cellBlocks) size
+
 
