@@ -6,6 +6,7 @@ module Types where
 
 import qualified Data.Map as DM
 import qualified Data.Set.Monad as DSM
+import qualified Data.Set as DS
 import qualified Data.Vector as DV
 import qualified System.Random as Random
 import Control.Monad
@@ -150,6 +151,10 @@ instance Mass LifeForm where
 
 class Draw a where
   draw :: a -> IO ()
+
+data SpaceHash a = SpaceHash Integer (DM.Map Loc (DS.Set a))
+                 deriving (Show)
+
 
 -- 1 2 3
 -- 4 5 6

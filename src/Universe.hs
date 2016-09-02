@@ -8,8 +8,9 @@ import qualified LifeForm
 import           Types
 import qualified Data.Set.Monad as DSM
 import Control.Monad
+--import qualified SpaceHash
 
-new size = Universe (Grid.new size) size 0 (DSM.empty)
+new size = Universe (Grid.new size) {-(SpaceHash.new 10)-} size 0 (DSM.empty)
 
 addLifeForm uv@(Universe _ _ _ lfs) lf = uv { uLifeForms = DSM.insert lf lfs }
 

@@ -13,19 +13,21 @@ new size =
       cells = DM.fromList [(Loc x y, EmptyCell) | x <- [0 .. w], y <- [0 .. h]]
   in Grid cells size      
 
-
 contains :: Grid -> Loc -> Bool
 contains (Grid _ (Size w h)) (Loc x y) = x < w && y < h
+
 
 putCell :: Grid -> Loc -> CellType -> Grid
 putCell g@(Grid cells (Size w h)) (Loc x y) cell =
   let loc' = Loc (x `mod` w) (y `mod` h)
   in g{gridCells = (DM.insert loc' cell cells)}
 
+
 offsetGrid (Grid cells _) size@(Size w h) dx dy =
   let offsetCells = [(Loc (x+dx `mod` w) (y+dy `mod` h), ct)
                     | (Loc x y, ct) <- DM.toList cells]
   in Grid (DM.fromList offsetCells) size
+
 
 -- will need to do collision detection here.
 addLifeForm grid@(Grid cells size) Simple{..} = --offset code gridLf) = 
@@ -34,11 +36,14 @@ addLifeForm grid@(Grid cells size) Simple{..} = --offset code gridLf) =
       augmentedGrid = Grid (DM.union cellsLf cells) size
   in augmentedGrid
 
+
 addLifeForms :: Foldable t => Grid -> t LifeForm -> Grid
 addLifeForms grid = foldl addLifeForm grid
 
+
 numCells (Grid _ (Size w h)) = w * h
 getCellAt (Grid cells _) loc = DM.lookup loc cells
+
 
 hasNeighbor grid loc =
   case getCellAt grid loc of
@@ -49,6 +54,7 @@ hasNeighbor grid loc =
 -- 1 2 3
 -- 4 5 6
 -- 7 8 9
+
 
 toDisplayBlock :: Grid -> Loc -> DisplayBlock
 toDisplayBlock grid loc =
@@ -68,6 +74,7 @@ toDisplayBlock grid loc =
            Just EmptyCell -> EmptyDblock
            Just LifeCell -> Dblock LifeCell (D5:[shard | (b, shard) <- zip gotNbrs shards, b])
      in block
+
 
 toDisplayGrid :: Grid -> DisplayGrid
 toDisplayGrid grid@(Grid cells size) =
