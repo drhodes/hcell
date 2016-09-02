@@ -104,13 +104,14 @@ data Transporter = Send Grid
                  | Recv Grid
 
 data Universe = Universe { uGrid :: Grid
+                         , uSpaceHash :: SpaceHash Integer
                          , uSize :: Size
                          , uTime :: Integer
                          , uLifeForms :: DSM.Set LifeForm
                          } deriving (Show)
 
 instance Mass Universe where
-  mass (Universe _ _ _ lifeForms) = sum $ DSM.map mass lifeForms
+  mass (Universe _ _ _ _ lifeForms) = sum $ DSM.map mass lifeForms
 
 data Orientation = TopBottom { topOffset :: Integer
                              , bottomOffset :: Integer

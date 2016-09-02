@@ -8,22 +8,29 @@ import qualified LifeForm
 import           Types
 import qualified Data.Set.Monad as DSM
 import Control.Monad
---import qualified SpaceHash
+import qualified SpaceHash
 
-new size = Universe (Grid.new size) {-(SpaceHash.new 10)-} size 0 (DSM.empty)
+new size = Universe (Grid.new size) (SpaceHash.new 10) size 0 (DSM.empty)
 
-addLifeForm uv@(Universe _ _ _ lfs) lf = uv { uLifeForms = DSM.insert lf lfs }
+addLifeForm uv@(Universe _ sh _ _ lfs) lf =
+  uv { uLifeForms = DSM.insert lf lfs
+     , uSpaceHash = let w = LifeForm.width lf
+                        h = LifeForm.height lf
+                        n = simpleId lf
+                    in SpaceHash.add sh (simpleLoc lf) n w h }
+
+
 
 step :: Universe -> HCell Universe
-step (Universe g s t lfs) = do
+step (Universe g sh s t lfs) = do
   let xs = DSM.toList lfs
   -- this conversion to from set to list back to set is sad
   -- reason why sets can't find Ord instance for (Monad Lifeform)
   -- hrm. maybe a better way to do it.
-  lfs' <- sequence $ map LifeForm.step xs 
-  return $ Universe g s (t+1) (DSM.fromList lfs')
+  lfs' <- mapM LifeForm.step xs 
+  return $ Universe g sh s (t+1) (DSM.fromList lfs')
 
-stepN n u@(Universe g s t lfs) = do
+stepN n u = do
   if n <= 0
     then return u
     else do u' <- step u

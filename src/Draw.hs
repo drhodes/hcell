@@ -35,7 +35,7 @@ instance Draw Grid where
     hr "╚" "╝"
     
 instance Draw Universe where
-  draw (Universe g s time ls) = do
+  draw (Universe g _ s time ls) = do
     putStrLn $ concat [ "A Universe of size: "
                       , show s
                       , ", at time: ", show time]

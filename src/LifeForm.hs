@@ -22,7 +22,10 @@ new loc@(Loc x y) code pattern = do
       y' = fromIntegral y
   return $ Simple lid loc code g 0
 
-addLifeForm uv@(Universe _ _ _ lfs) lf = uv { uLifeForms = DSM.insert lf lfs }
+-- addLifeForm uv@(Universe _ _ _ _ lfs) lf = uv { uLifeForms = DSM.insert lf lfs }
+width = sizeW . gridSize . simpleGrid 
+height = sizeH . gridSize . simpleGrid 
+
 
 buildCell x y char =
   let loc = Loc x y

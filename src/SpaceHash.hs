@@ -33,9 +33,9 @@ removeFromBucket el (SpaceHash bucketSize store) loc =
 
 generateSpan bucketSize elLoc@(Loc x y) elWidth elHeight = 
   let left = x - (x `mod` bucketSize) -- rectify to grid.
-      right = (x + elWidth) - (x + elWidth `mod` bucketSize)
+      right = (x + elWidth) - ((x + elWidth) `mod` bucketSize)
       top = y - (y `mod` bucketSize)
-      bottom = (y + elWidth) - (y + elHeight `mod` bucketSize)
+      bottom = (y + elWidth) - ((y + elHeight) `mod` bucketSize)
       bucketLocs = [Loc bx by |
                     bx <- [left, left+bucketSize .. right],
                     by <- [top, top+bucketSize .. bottom]]
