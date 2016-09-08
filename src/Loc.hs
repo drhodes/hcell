@@ -22,3 +22,5 @@ randomDir :: HCell Dir
 randomDir = do
   n <- Util.randomInt
   return $ toEnum (n `mod` 4)
+
+wrap (Size w h) (Loc x y) = Loc (x `mod` w) (y `mod` h)

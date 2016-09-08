@@ -17,6 +17,9 @@ contains :: Grid -> Loc -> Bool
 contains (Grid _ (Size w h)) (Loc x y) = x < w && y < h
 
 
+getNonEmptyCellLocs Grid{..} =
+  [loc | (loc, cellType) <- DM.toList gridCells, cellType /= EmptyCell]
+
 putCell :: Grid -> Loc -> CellType -> Grid
 putCell g@(Grid cells (Size w h)) (Loc x y) cell =
   let loc' = Loc (x `mod` w) (y `mod` h)

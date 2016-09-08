@@ -16,16 +16,17 @@ import qualified Util
 
 new :: Loc -> Program -> [String] -> HCell LifeForm
 new loc@(Loc x y) code pattern = do
-  lid <- Util.nextNonce
+  lid <- liftM LifeId Util.nextNonce
   let g = buildLifeFormGrid pattern
       x' = fromIntegral y
       y' = fromIntegral y
   return $ Simple lid loc code g 0
 
 -- addLifeForm uv@(Universe _ _ _ _ lfs) lf = uv { uLifeForms = DSM.insert lf lfs }
+
+
 width = sizeW . gridSize . simpleGrid 
 height = sizeH . gridSize . simpleGrid 
-
 
 buildCell x y char =
   let loc = Loc x y
@@ -35,7 +36,6 @@ buildCell x y char =
         't' -> Transporter
         x -> error $ "LifeForm.buildCell need to implement " ++ (show x)
   in (loc, cell)
-
 
 rowCells :: (Integer, String) -> [(Loc, CellType)]
 rowCells (y, row) = [buildCell x y char | (char, x) <- zip row [0..]]
@@ -47,20 +47,27 @@ buildLifeFormGrid rows =
       g = DM.fromList (concat $ map rowCells enumRows)
   in Grid g (Size w h) 
 
-moveRandom s@Simple{..} = do
+moveRandom s@Simple{..} size = do
   d <- Loc.randomDir
-  return $ s{simpleLoc = Loc.toDir d simpleLoc}
+  let nextLoc = Loc.wrap size (Loc.toDir d simpleLoc)
+  return $ s{simpleLoc = nextLoc}
 
-step :: LifeForm -> HCell LifeForm
-step lf@(Simple lid loc code grid age) = do
+step :: LifeForm -> Size -> HCell LifeForm
+step lf@(Simple lid loc code grid age) size = do
   let inst = Program.curInstruction code
       code' = Program.rotate code
       age' = age + 1
+  
   case inst of
-    Move dir -> return $ Simple lid (Loc.toDir dir loc) code' grid age'
+    Move dir -> do let nextLoc = Loc.wrap size (Loc.toDir dir loc)
+                   return $ Simple lid nextLoc code' grid age'
     NOP -> return $ Simple lid loc code' grid age'
-    MoveRandom -> do lf' <- moveRandom lf
-                     return $ lf'{simpleProg = code'}{simpleAge = age'}
-    _ -> return $ lf{simpleProg = code'}{simpleAge = age'}
+    MoveRandom -> do lf' <- moveRandom lf size
+                     return $ lf'{simpleProg = code'
+                                 , simpleAge = age'}
+    _ -> return $ lf{ simpleProg = code'
+                    , simpleAge = age'}
+  
 
-
+getNonEmptyCellLocs universeSize Simple{..} =
+  map (Loc.wrap universeSize . Loc.add simpleLoc) (Grid.getNonEmptyCellLocs simpleGrid)

@@ -34,7 +34,7 @@ step n u cs = do
                       return (u, cs, [])
     Right (u', cs') -> do
       let lfs = uLifeForms u'          
-      return (u', cs', DSM.toList lfs)
+      return (u', cs', DM.elems lfs)
 
 -- these will go into a State value.
 tileSize = 16
@@ -113,7 +113,7 @@ mainLoop uv cellState = do
         mapM (renderLifeForm renderer) lfs
         SDL.present renderer
 
-        unless quit $ (if frameNumber `mod` 1 == 0
+        unless quit $ (if frameNumber `mod` 10 == 0
                        then loop (frameNumber+1) u' cs'
                        else loop (frameNumber+1) u cs)
         

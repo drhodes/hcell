@@ -5,7 +5,6 @@
 module Types where
 
 import qualified Data.Map as DM
-import qualified Data.Set.Monad as DSM
 import qualified Data.Set as DS
 import qualified Data.Vector as DV
 import qualified System.Random as Random
@@ -41,6 +40,8 @@ newCS = CellState (Random.mkStdGen (fromIntegral 0)) 0
 runCellState :: Monad m => HCell a -> m (Either String (a, CellState))
 runCellState = runHCell newCS
 
+data LifeId = LifeId Integer
+            deriving (Show, Eq, Ord)
 
 
 class Mass a where
@@ -104,14 +105,15 @@ data Transporter = Send Grid
                  | Recv Grid
 
 data Universe = Universe { uGrid :: Grid
-                         , uSpaceHash :: SpaceHash Integer
+                         , uCollisionGrid :: CollisionGrid
                          , uSize :: Size
                          , uTime :: Integer
-                         , uLifeForms :: DSM.Set LifeForm
+                         , uLifeForms :: DM.Map LifeId LifeForm
                          } deriving (Show)
 
 instance Mass Universe where
-  mass (Universe _ _ _ _ lifeForms) = sum $ DSM.map mass lifeForms
+  mass (Universe _ _ _ _ lifeForms) =
+    sum $ map mass (DM.elems lifeForms)
 
 data Orientation = TopBottom { topOffset :: Integer
                              , bottomOffset :: Integer
@@ -128,7 +130,7 @@ instance Mass Joint where
   mass _ = 1
 
 data LifeForm = Complex Loc Program Joint LifeForm LifeForm
-              | Simple { simpleId :: Integer
+              | Simple { simpleId :: LifeId 
                        , simpleLoc :: Loc
                        , simpleProg :: Program
                        , simpleGrid :: Grid
@@ -141,8 +143,6 @@ instance Ord LifeForm where
 instance Eq LifeForm where
   (==) l1 l2 = simpleId l1 == simpleId l2
 
-
-
 lifeFormGrid (Complex _ _ _ lf1 lf2) = lifeFormGrid lf1 ++ lifeFormGrid lf2
 lifeFormGrid Simple{..} = [simpleGrid]
                          
@@ -153,9 +153,11 @@ instance Mass LifeForm where
 class Draw a where
   draw :: a -> IO ()
 
-data SpaceHash a = SpaceHash Integer (DM.Map Loc (DS.Set a))
-                 deriving (Show)
-
+data CollisionGrid = CollisionGrid { cGridSize :: Size
+                                   , cGridMap :: DM.Map Loc Bool 
+                                   } deriving (Show)
+                                              
+                                              
 
 -- 1 2 3
 -- 4 5 6

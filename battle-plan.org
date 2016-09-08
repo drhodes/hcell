@@ -1,0 +1,13 @@
+* hcell
+Simulated life on a grid with heirarchical structures, machine
+instructions DNA. Replication, Combination, Energy, Life, Death.
+
+** Basic
+Lifeform combination with bare joint cells
+Eating, Aging, instruction inheritence.
+
+
+** Upcoming Features
+LifeForms grow. cell groups copy and attach.  This is will be
+necessary for large scale creatures that utilize paristalsis and other
+complex strategies.

@@ -27,8 +27,8 @@ library
                        Display
                        Util
                        Color
-                       SpaceHash
-                         
+                       CollisionGrid
+                                                
   build-depends:       base >= 4.7 && < 5
                      , containers >= 0.5.6.2
                      , hashable >= 1.2.4.0
@@ -38,6 +38,7 @@ library
                      , mwc-random >= 0.13.4.0
                      , parallel >= 3.2.1.0
                      , random >= 1.1
+                     , random-shuffle >= 0.0.4
                      , sdl2 >= 2.1.2.1
                      , set-monad >= 0.2.0.0
                      , transformers >= 0.4.2.0
@@ -58,6 +59,7 @@ executable hcell-exe
                      , mwc-random >= 0.13.4.0
                      , parallel >= 3.2.1.0
                      , random >= 1.1
+                     , random-shuffle >= 0.0.4
                      , sdl2 >= 2.1.2.1
                      , set-monad >= 0.2.0.0
                      , transformers >= 0.4.2.0
@@ -78,6 +80,7 @@ test-suite hcell-test
                      , mwc-random >= 0.13.4.0
                      , parallel >= 3.2.1.0
                      , random >= 1.1
+                     , random-shuffle >= 0.0.4
                      , sdl2 >= 2.1.2.1
                      , set-monad >= 0.2.0.0
                      , transformers >= 0.4.2.0

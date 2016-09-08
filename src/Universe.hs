@@ -1,37 +1,56 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE RecordWildCards #-}
 module Universe where
 
 import qualified Data.Map as DM
 import qualified Grid
 import qualified LifeForm
 import           Types
-import qualified Data.Set.Monad as DSM
 import Control.Monad
-import qualified SpaceHash
+import qualified System.Random.Shuffle as Shuffle
+import Control.Monad.State
+import qualified CollisionGrid
 
-new size = Universe (Grid.new size) (SpaceHash.new 10) size 0 (DSM.empty)
+new size = Universe (Grid.new size) (CollisionGrid.new size) size 0 (DM.empty)
 
-addLifeForm uv@(Universe _ sh _ _ lfs) lf =
-  uv { uLifeForms = DSM.insert lf lfs
-     , uSpaceHash = let w = LifeForm.width lf
-                        h = LifeForm.height lf
-                        n = simpleId lf
-                    in SpaceHash.add sh (simpleLoc lf) n w h }
+addLifeForm u@(Universe _ cg _ _ lfs) lf = do
+  let forms = DM.insert (simpleId lf) lf lfs
+  cgrid <- CollisionGrid.insertLifeForm cg lf  
+  return $ u { uLifeForms = forms, uCollisionGrid = cgrid }
 
+step1 :: Universe -> LifeForm -> HCell Universe
+step1 u@Universe{..} lf = do
+  -- clear this lifeForms cells, so after stepping the lifeform it
+  -- doesn't collide with itself  
+  cgrid' <- CollisionGrid.clearLifeCells uCollisionGrid lf
+  lifeForm' <- LifeForm.step lf uSize
+  collides <- CollisionGrid.doesCollide cgrid' lifeForm'
 
+  if collides
+    then return u
+    else do cgrid'' <- CollisionGrid.insertLifeForm cgrid' lifeForm'
+            let lifeForms = DM.insert (simpleId lf) lifeForm' uLifeForms -- replace 
+            return u{uLifeForms = lifeForms, uCollisionGrid = cgrid'}
 
 step :: Universe -> HCell Universe
-step (Universe g sh s t lfs) = do
-  let xs = DSM.toList lfs
-  -- this conversion to from set to list back to set is sad
-  -- reason why sets can't find Ord instance for (Monad Lifeform)
-  -- hrm. maybe a better way to do it.
-  lfs' <- mapM LifeForm.step xs 
-  return $ Universe g sh s (t+1) (DSM.fromList lfs')
+step u@(Universe g cg s t lfs) = do
+  seed <- liftM csRand get
+  -- randomize the lifeforms to make things fair
+  let lifeforms = DM.elems lfs
+      numforms = length lifeforms
+      shuffledLife = Shuffle.shuffle' lifeforms numforms seed
+  liftM incrementTime $ foldM step1 u shuffledLife
 
 stepN n u = do
   if n <= 0
     then return u
     else do u' <- step u
             stepN (n-1) u'
+
+incrementTime u = let t = uTime u in u{uTime = t + 1}
+
+-------------------------------------------------------
+
+
+
