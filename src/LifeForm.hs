@@ -14,6 +14,10 @@ import           Types
 import qualified Data.Hashable as Hash
 import qualified Util
 
+import qualified DisplayGrid.Api as DG
+import qualified DisplayGrid.Types as DT
+
+
 new :: Loc -> Program -> [String] -> HCell LifeForm
 new loc@(Loc x y) code pattern = do
   lid <- liftM LifeId Util.nextNonce
@@ -61,13 +65,29 @@ step lf@(Simple lid loc code grid age) size = do
   case inst of
     Move dir -> do let nextLoc = Loc.wrap size (Loc.toDir dir loc)
                    return $ Simple lid nextLoc code' grid age'
+                   
     NOP -> return $ Simple lid loc code' grid age'
+    
     MoveRandom -> do lf' <- moveRandom lf size
-                     return $ lf'{simpleProg = code'
+                     return $ lf'{ simpleProg = code'
                                  , simpleAge = age'}
+                       
     _ -> return $ lf{ simpleProg = code'
                     , simpleAge = age'}
   
 
 getNonEmptyCellLocs universeSize Simple{..} =
   map (Loc.wrap universeSize . Loc.add simpleLoc) (Grid.getNonEmptyCellLocs simpleGrid)
+
+displayOne :: LifeForm -> DT.GridT ()
+displayOne s = do
+  w <- DG.getWindowWidth
+  h <- DG.getWindowHeight
+  let cellLocs = getNonEmptyCellLocs (Size w h) s
+
+  let f (Loc x y) = DG.setCellColor (DG.gray3) (DT.CellLoc x y)
+  mapM_ f cellLocs
+
+displayAll :: DM.Map LifeId LifeForm -> DT.GridT ()
+displayAll xs = mapM_ displayOne (DM.elems xs)
+  

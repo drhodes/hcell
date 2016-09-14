@@ -17,14 +17,12 @@ import Control.Monad.Trans.Except
 import Data.Functor.Identity
 import Control.Monad.Except
 
-
 randomInt :: HCell Int
 randomInt = do
   cs <- get
   let (x, gen') = Random.next (csRand cs)
   put (cs { csRand = gen' })
   return x
-
 
 nextNonce :: HCell Integer
 nextNonce = do

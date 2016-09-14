@@ -32,7 +32,7 @@ instance Draw CellType where
   draw LifeCell = putStr "* "
   draw EmptyCell = putStr ". "
   draw Transporter = putStr "T "
-
+x
 data SimpleCode = Move Dir
                 | MoveRandom
                 | NOP

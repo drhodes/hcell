@@ -12,7 +12,7 @@ category:            Yes.
 build-type:          Simple
 -- extra-source-files:
 cabal-version:       >=1.10
-
+                     
 library
   ghc-options:         -threaded -eventlog -rtsopts 
   hs-source-dirs:      src
@@ -21,15 +21,13 @@ library
                        Types
                        Universe
                        LifeForm
-                       Draw
                        Loc
                        Program
-                       Display
                        Util
-                       Color
                        CollisionGrid
-                                                
+                                                                       
   build-depends:       base >= 4.7 && < 5
+                     , display-grid
                      , containers >= 0.5.6.2
                      , hashable >= 1.2.4.0
                      , linear >= 1.20.5
@@ -51,6 +49,7 @@ executable hcell-exe
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , containers >= 0.5.6.2
+                     , display-grid
                      , hashable >= 1.2.4.0
                      , hcell
                      , linear >= 1.20.5
@@ -72,6 +71,7 @@ test-suite hcell-test
   main-is:             Spec.hs
   build-depends:       base
                      , containers >= 0.5.6.2
+                     , display-grid
                      , hashable >= 1.2.4.0
                      , hcell
                      , linear >= 1.20.5

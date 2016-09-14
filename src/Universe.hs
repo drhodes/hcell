@@ -12,6 +12,9 @@ import qualified System.Random.Shuffle as Shuffle
 import Control.Monad.State
 import qualified CollisionGrid
 
+import qualified DisplayGrid.Api as DG
+import qualified DisplayGrid.Types as DT
+
 new size = Universe (Grid.new size) (CollisionGrid.new size) size 0 (DM.empty)
 
 addLifeForm u@(Universe _ cg _ _ lfs) lf = do
@@ -49,6 +52,11 @@ stepN n u = do
             stepN (n-1) u'
 
 incrementTime u = let t = uTime u in u{uTime = t + 1}
+
+
+display :: Universe -> DT.GridT ()
+display u = LifeForm.displayAll (uLifeForms u)
+
 
 -------------------------------------------------------
 

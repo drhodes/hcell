@@ -1,14 +1,21 @@
+# http://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
+.PHONY: help
+help:
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk \
+	'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+FORCE:
 
 watch: ## build
 	stack build --file-watch 
 
 build:
-	#stack build --ghc-options -threaded --ghc-options -eventlog --ghc-options -rtsopts
-	stack build --ghc-options -threaded --ghc-options -rtsopts
+	stack build --ghc-options -threaded --ghc-options -eventlog --ghc-options -rtsopts
+	#stack build --ghc-options -threaded --ghc-options -rtsopts
 
 run-profile:
 	stack exec hcell-exe -- +RTS -ls -N7
-
+	threadscope hcell-exe.eventlog
 run:
 	stack exec hcell-exe -- +RTS -N7
 
@@ -31,11 +38,4 @@ add: clean ## add files to the git repo
 commit: ## git commit -a
 	git commit -a
 
-# http://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
-.PHONY: help
-help:
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk \
-	'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
-
-FORCE:
 

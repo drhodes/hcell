@@ -1,5 +1,5 @@
 module Color where
-
+{-
 import Linear
 import GHC.Word
 import Data.Bits
@@ -29,4 +29,6 @@ fromHex x = let mask amt = fromIntegral $ shiftR x amt .&. 0xFF
             in V4 r g b a :: V4 Word8
 
 
-cellBlue = fromHex 0x00B1FEFF                             
+cellBlue = fromHex 0x00B1FEFF
+-}
+

@@ -16,7 +16,6 @@ new size =
 contains :: Grid -> Loc -> Bool
 contains (Grid _ (Size w h)) (Loc x y) = x < w && y < h
 
-
 getNonEmptyCellLocs Grid{..} =
   [loc | (loc, cellType) <- DM.toList gridCells, cellType /= EmptyCell]
 

@@ -9,8 +9,10 @@ import qualified LifeForm
 import qualified Program
 import           Types
 import qualified Universe
-import qualified Display
+-- import qualified Display
 import qualified Util
+import qualified DisplayGrid.Api as DG
+import qualified DisplayGrid.Types as DT
 
 algea :: Dir -> HCell LifeForm
 algea d = do
@@ -56,24 +58,46 @@ beast = do
                                , "***"
                                ]
 
+newU = Universe.new (Size 100 100)
 
-newU = Universe.new (Size 50 50)
 
-
+buildCritters :: HCell Universe
 buildCritters = do
   x <- replicateM 10 $ algea N
   y <- replicateM 10 beast
   z <- replicateM 10 amoeba
   w <- replicateM 10 blob
   let critters = concat [x, y, z, w]
-
   foldM Universe.addLifeForm newU critters
 
+setup = do
+  DG.setWindowTitle "Heirarchical Cellular"
+  DG.setCellSize 6
+  DG.setWindowHeight 100
+  DG.setWindowWidth 100
+
+everyFrame (u, cs) = do
+  frame <- DG.getCurrentFrame
+  when (frame == 0) setup
+  
+  DG.clearScreen DG.grayA
+  
+  stepResult <- runHCell cs (Universe.step u)
+  case stepResult of
+      Right (u', cs') -> do
+        Universe.display u
+        return (u', cs')
+      
+      Left (msg) -> do
+        DG.pushInstruction $ DT.Print msg
+        error msg
 
 main :: IO ()
 main = do
   Right (u, cs) <- runHCell newCS buildCritters
-  Display.mainLoop u cs
+  DG.mainLoop everyFrame (u, cs)
+
+
   
 
 
