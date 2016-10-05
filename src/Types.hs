@@ -2,6 +2,8 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE StrictData #-}
+
 module Types where
 
 import qualified Data.Map as DM
@@ -13,12 +15,12 @@ import Control.Monad.State
 import Control.Monad.Trans.Except
 import Data.Functor.Identity
 import Control.Monad.Except
+import qualified SDL
+import qualified DisplayGrid.Types as DT
+import Linear
 
 type HCell b = forall m. ( MonadState CellState m,
                            MonadError String m ) => m b
-
--- runStateExceptT :: s -> ExceptT e (StateT s m) a -> m (Either e a, s)
--- runStateExceptT s = flip runStateT s . runExceptT
 
 runExceptStateT :: s -> StateT s (ExceptT String m) a -> m (Either String (a, s))
 runExceptStateT s = runExceptT . flip runStateT s
@@ -27,15 +29,11 @@ data CellState = CellState { csRand :: Random.StdGen
                            , csNonce :: Integer
                            } deriving (Show)
 
-
----runHCell :: s -> Control.Monad.Trans.Except.ExceptT e (Control.Monad.Trans.State.Lazy.StateT s m) a -> m (Either e a, s)
-
-
 runHCell :: s -> StateT s (ExceptT String m) a -> m (Either String (a, s))
-runHCell f x = runExceptStateT f x
+runHCell = runExceptStateT 
 
 newCS :: CellState
-newCS = CellState (Random.mkStdGen (fromIntegral 0)) 0
+newCS = CellState (Random.mkStdGen 0) 0
 
 runCellState :: Monad m => HCell a -> m (Either String (a, CellState))
 runCellState = runHCell newCS
@@ -68,33 +66,27 @@ instance Mass CellType where
 
 data Program = Program Integer (DV.Vector Code)
                deriving (Show, Eq, Ord)
-                         
+
+data Rot = CCW | CW deriving (Show, Eq, Ord)
+                        
 data Code = Move Dir
           | MoveRandom
+          | Rotate Rot
           | NOP
           | PassLeft
           | PassRight
           | PassBoth
-          | Flip
+          | FlipV
+          | Transpose
             deriving (Show, Eq, Ord)
 
-data Size = Size { sizeW :: Integer
-                 , sizeH :: Integer
+data Size = Size { sizeW :: !Integer
+                 , sizeH :: !Integer
                  } deriving (Show, Eq, Ord)
 
-data Grid = Grid { gridCells :: DM.Map Loc CellType
-                 , gridSize :: Size
+data Grid = Grid { gridCells :: !(DM.Map Loc CellType)
+                 , gridSize :: !Size
                  } deriving (Show, Eq, Ord)
-
-data DisplayShard = D1 | D2 | D3 | D4 | D5 | D6 | D7 | D8 | D9
-                  deriving(Show, Eq, Ord)
-data DisplayBlock = Dblock CellType [DisplayShard]
-                  | EmptyDblock
-                    deriving (Show, Eq, Ord)
-data DisplayGrid = DisplayGrid { dgridCells :: DM.Map Loc DisplayBlock
-                               , dgridSize :: Size
-                               } deriving (Show, Eq, Ord)
-
 
 instance Mass Grid where
   mass (Grid g _) = sum $ map mass (DM.elems g)
@@ -104,11 +96,11 @@ instance Mass Grid where
 data Transporter = Send Grid
                  | Recv Grid
 
-data Universe = Universe { uGrid :: Grid
-                         , uCollisionGrid :: CollisionGrid
-                         , uSize :: Size
-                         , uTime :: Integer
-                         , uLifeForms :: DM.Map LifeId LifeForm
+data Universe = Universe { uGrid :: !Grid
+                         , uCollisionGrid :: !CollisionGrid
+                         , uSize :: !Size
+                         , uTime :: !Integer
+                         , uLifeForms :: !(DM.Map LifeId LifeForm)
                          } deriving (Show)
 
 instance Mass Universe where
@@ -135,6 +127,7 @@ data LifeForm = Complex Loc Program Joint LifeForm LifeForm
                        , simpleProg :: Program
                        , simpleGrid :: Grid
                        , simpleAge :: Integer                       
+                       , simpleColor :: DT.Color
                        } deriving (Show)
 
 instance Ord LifeForm where
@@ -162,5 +155,3 @@ data CollisionGrid = CollisionGrid { cGridSize :: Size
 -- 1 2 3
 -- 4 5 6
 -- 7 8 9
-
-

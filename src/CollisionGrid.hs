@@ -3,7 +3,7 @@
 {-# LANGUAGE RecordWildCards #-}
 module CollisionGrid ( new
                      , doesCollide
-                     , clearLifeCells
+                     , rmLifeForm
                      , insertLifeForm
                      ) where
 
@@ -16,15 +16,16 @@ import Control.Monad.Except
 import qualified Grid
 import qualified LifeForm
 import qualified Loc
+import qualified Debug.Trace as Debug
 
 new size@(Size w h) =
-  let cgrid = DM.fromList [(Loc x y, False) | x <- [0 .. w], y <- [0 .. h]]
+  let cgrid = DM.fromList []
   in CollisionGrid size cgrid
 
 clearCell :: CollisionGrid -> Loc -> HCell CollisionGrid
 clearCell cg@CollisionGrid{..} loc@(Loc x y) = do
   --checkOutOfRange cg loc
-  return $ cg{cGridMap = DM.insert loc False cGridMap}
+  return $ cg{cGridMap = DM.delete loc cGridMap}
 
 fillCell :: CollisionGrid -> Loc -> HCell CollisionGrid
 fillCell cg@CollisionGrid{..} loc@(Loc x y) = do
@@ -36,11 +37,10 @@ insertLifeForm cgrid lifeForm =
   let relativeLocs = LifeForm.getNonEmptyCellLocs (cGridSize cgrid) lifeForm
   in foldM fillCell cgrid relativeLocs
 
-clearLifeCells :: CollisionGrid -> LifeForm -> HCell CollisionGrid
-clearLifeCells cgrid lifeForm =
-  -- clear a lifeforms grid a collision grid
-  let relativeLocs = LifeForm.getNonEmptyCellLocs (cGridSize cgrid) lifeForm
-  in foldM clearCell cgrid relativeLocs
+rmLifeForm :: CollisionGrid -> LifeForm -> HCell CollisionGrid
+rmLifeForm cgrid lifeForm =
+  let locs = LifeForm.getNonEmptyCellLocs (cGridSize cgrid) lifeForm
+  in foldM clearCell cgrid locs
 
 checkOutOfRange :: CollisionGrid -> Loc -> HCell ()
 checkOutOfRange CollisionGrid{..} (Loc x y) = do
@@ -56,10 +56,13 @@ cellEmpty cgrid@CollisionGrid{..} loc = do
     Just False -> return True
     Just True -> return False
 
+
+doesCollide :: CollisionGrid -> LifeForm -> HCell Bool
 doesCollide cgrid lifeForm = do
   let locs = LifeForm.getNonEmptyCellLocs (cGridSize cgrid) lifeForm
   -- check the cgrid to make sure all the locs are False
-  liftM (not . and) $ mapM (cellEmpty cgrid) locs
+  checkedCells <- mapM (cellEmpty cgrid) locs
+  return $ not $ and checkedCells
 
 
 

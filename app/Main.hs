@@ -1,33 +1,27 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE StrictData #-}
 
 module Main where
 
 import           Control.Monad
-import           Draw
 import qualified LifeForm
 import qualified Program
 import           Types
 import qualified Universe
--- import qualified Display
 import qualified Util
 import qualified DisplayGrid.Api as DG
 import qualified DisplayGrid.Types as DT
-
+import qualified SDL
+  
 algea :: Dir -> HCell LifeForm
 algea d = do
-  x' <- Util.randomInt
-  y' <- Util.randomInt
-  let x = fromIntegral $ x' `mod` 100
-      y = fromIntegral $ y' `mod` 100
-  LifeForm.new (Loc x y) (Program.new [ MoveRandom , Move d ]) ["*"]
+  Loc x y <- randomLoc
+  LifeForm.new (Loc x y) (Program.new [ MoveRandom , Move d ]) ["*"] 
 
 amoeba :: HCell LifeForm
 amoeba = do
-  x' <- Util.randomInt
-  y' <- Util.randomInt
-  let x = fromIntegral $ x' `mod` 100
-      y = fromIntegral $ y' `mod` 100
+  Loc x y <- randomLoc
   LifeForm.new (Loc x y) (Program.new [ MoveRandom
                                       , NOP
                                       ]) [ "**"
@@ -35,31 +29,37 @@ amoeba = do
 
 blob :: HCell LifeForm
 blob = do
-  x' <- Util.randomInt
-  y' <- Util.randomInt
-  let x = fromIntegral $ x' `mod` 100
-      y = fromIntegral $ y' `mod` 100
+  Loc x y <- randomLoc
   LifeForm.new (Loc x y) (Program.new [ MoveRandom
                                       , NOP
                                       ]) [ "**"
                                          , "**"]
-
+    
+randomLoc :: HCell Loc
+randomLoc = do
+  x' <- Util.randomInt
+  y' <- Util.randomInt
+  
+  let x = fromIntegral $ x' `mod` 75
+      y = fromIntegral $ y' `mod` 75
+  return $ Loc x y
 
 beast :: HCell LifeForm
 beast = do
-  x' <- Util.randomInt
-  y' <- Util.randomInt
-  let x = fromIntegral $ x' `mod` 100
-      y = fromIntegral $ y' `mod` 100
-      prog = Program.new [ MoveRandom, NOP, NOP, NOP]
-      prog' = head $ drop (x' `mod` 4) $ iterate Program.rotate prog
+  Loc x y <- randomLoc
+  let prog = Program.new [ MoveRandom
+                         , FlipV
+                         , MoveRandom
+                         , Transpose
+                         , MoveRandom
+                         , Rotate CCW]
+      prog' = head $ drop (fromIntegral x `mod` 4) $ iterate Program.rotate prog
   LifeForm.new (Loc x y) prog' [ "*.*"
                                , "*.*"
                                , "***"
                                ]
 
 newU = Universe.new (Size 100 100)
-
 
 buildCritters :: HCell Universe
 buildCritters = do
@@ -70,17 +70,21 @@ buildCritters = do
   let critters = concat [x, y, z, w]
   foldM Universe.addLifeForm newU critters
 
-setup = do
+setup :: Universe -> DT.GridT ()
+setup u = do
+  let (Size w h) = uSize u
   DG.setWindowTitle "Heirarchical Cellular"
-  DG.setCellSize 6
-  DG.setWindowHeight 100
-  DG.setWindowWidth 100
+  DG.setCellSize 10
+  DG.setWindowHeight (fromIntegral w)
+  DG.setWindowWidth (fromIntegral h)
 
+everyFrame :: (Universe, CellState) -> DT.GridT (Universe, CellState)
 everyFrame (u, cs) = do
   frame <- DG.getCurrentFrame
-  when (frame == 0) setup
+  when (frame == 0) $ setup u
   
   DG.clearScreen DG.grayA
+  DG.getEvents >>= handleEvents
   
   stepResult <- runHCell cs (Universe.step u)
   case stepResult of
@@ -92,13 +96,24 @@ everyFrame (u, cs) = do
         DG.pushInstruction $ DT.Print msg
         error msg
 
+handleEvent :: SDL.Event -> DT.GridT ()
+handleEvent event =
+  case SDL.eventPayload event of
+    SDL.MouseMotionEvent payload ->
+      case payload of
+        SDL.MouseMotionEventData _ _ _ pos _ -> do
+          cellSize <- DG.getCellSize
+          let (SDL.P (SDL.V2 x y)) = pos
+              x' = x `div` fromIntegral cellSize
+              y' = y `div` fromIntegral cellSize
+              loc = DT.CellLoc (fromIntegral x') (fromIntegral y')
+          DG.setCellColor (DG.colorFromHex 0xFF0000FF) loc
+    _ -> return ()
+    
+handleEvents :: [SDL.Event] -> DT.GridT ()
+handleEvents events = mapM_ handleEvent events
+
 main :: IO ()
 main = do
   Right (u, cs) <- runHCell newCS buildCritters
   DG.mainLoop everyFrame (u, cs)
-
-
-  
-
-
-  
