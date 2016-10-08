@@ -25,7 +25,7 @@ library
                        Program
                        Util
                        CollisionGrid
-                                                                       
+                       
   build-depends:       base >= 4.7 && < 5
                      , display-grid
                      , containers >= 0.5.6.2

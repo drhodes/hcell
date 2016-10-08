@@ -21,9 +21,9 @@ run-profile-mem:
 	threadscope hcell-exe.eventlog
 
 run-profile:
-	stack build --executable-profiling --library-profiling 
-	# stack exec hcell-exe -- +RTS
-	# hp2ps -e8in -c hcell-exe.hp
+	# stack build --executable-profiling --library-profiling 
+	stack exec hcell-exe -- +RTS
+	#hp2ps -e8in -c hcell-exe.hp
 run:
 	stack exec hcell-exe -- +RTS -N7
 

@@ -52,15 +52,19 @@ data Loc = Loc { locX :: Integer
 data Dir = E | N | W | S
          deriving (Show, Eq, Ord, Enum)
 
+data WallCellType = PosWC
+                  | NegWC
+                  deriving (Show, Eq, Ord)
+
 data CellType = JointCell Joint
-              | LifeCell
+              | WallCell WallCellType
               | EmptyCell
               | Transporter
                 deriving (Show, Eq, Ord)
 
 instance Mass CellType where
   mass (JointCell _) = 1
-  mass LifeCell = 1
+  mass (WallCell _) = 1
   mass EmptyCell = 0
   mass Transporter = 0
 
@@ -127,7 +131,6 @@ data LifeForm = Complex Loc Program Joint LifeForm LifeForm
                        , simpleProg :: Program
                        , simpleGrid :: Grid
                        , simpleAge :: Integer                       
-                       , simpleColor :: DT.Color
                        } deriving (Show)
 
 instance Ord LifeForm where

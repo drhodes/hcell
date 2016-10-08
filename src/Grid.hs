@@ -24,17 +24,15 @@ putCell g@(Grid cells (Size w h)) (Loc x y) cell =
   let loc' = Loc (x `mod` w) (y `mod` h)
   in g{gridCells = (DM.insert loc' cell cells)}
 
-
 offsetGrid (Grid cells _) size@(Size w h) dx dy =
   let offsetCells = [(Loc (x+dx `mod` w) (y+dy `mod` h), ct)
                     | (Loc x y, ct) <- DM.toList cells]
   in Grid (DM.fromList offsetCells) size
 
-
 testg = Grid cells size
   where cells = DM.fromList $ zip locs cts
         locs = [Loc 0 0, Loc 1 0, Loc 0 1, Loc 1 1]
-        cts = [LifeCell, EmptyCell, Transporter, LifeCell]
+        cts = [WallCell NegWC, EmptyCell, Transporter, WallCell PosWC]
         size = Size 3 3
 
 transpose (Grid cells (Size w h)) = Grid diagFlip (Size h w)
@@ -51,16 +49,15 @@ flipV (Grid cells size@(Size w h)) = Grid flipV size
         flipV = DM.fromList [(Loc x (f y), ct) | (Loc x y, ct) <- xs]
 
 rotate CCW = flipV . transpose
+
 -- rotate CW = rotate CCW . rotate CCW . rotate CCW
-
-
 -- will need to do collision detection here.
+
 addLifeForm grid@(Grid cells size) Simple{..} = --offset code gridLf) = 
   let (Loc dx dy) = simpleLoc
       (Grid cellsLf _) = offsetGrid simpleGrid size dx dy
       augmentedGrid = Grid (DM.union cellsLf cells) size
   in augmentedGrid
-
 
 addLifeForms :: Foldable t => Grid -> t LifeForm -> Grid
 addLifeForms grid = foldl addLifeForm grid

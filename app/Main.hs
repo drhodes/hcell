@@ -14,26 +14,31 @@ import qualified DisplayGrid.Api as DG
 import qualified DisplayGrid.Types as DT
 import qualified SDL
   
-algea :: Dir -> HCell LifeForm
-algea d = do
+algeaPos :: Dir -> HCell LifeForm
+algeaPos d = do
   Loc x y <- randomLoc
-  LifeForm.new (Loc x y) (Program.new [ MoveRandom , Move d ]) ["*"] 
+  LifeForm.new (Loc x y) (Program.new [ MoveRandom , Move d ]) ["+"] 
+
+algeaNeg :: Dir -> HCell LifeForm
+algeaNeg d = do
+  Loc x y <- randomLoc
+  LifeForm.new (Loc x y) (Program.new [ MoveRandom , Move d ]) ["-"] 
 
 amoeba :: HCell LifeForm
 amoeba = do
   Loc x y <- randomLoc
   LifeForm.new (Loc x y) (Program.new [ MoveRandom
                                       , NOP
-                                      ]) [ "**"
-                                         , ".*"]
+                                      ]) [ "++"
+                                         , ".+"]
 
 blob :: HCell LifeForm
 blob = do
   Loc x y <- randomLoc
   LifeForm.new (Loc x y) (Program.new [ MoveRandom
                                       , NOP
-                                      ]) [ "**"
-                                         , "**"]
+                                      ]) [ "++"
+                                         , "++"]
     
 randomLoc :: HCell Loc
 randomLoc = do
@@ -50,31 +55,29 @@ beast = do
   let prog = Program.new [ MoveRandom
                          , FlipV
                          , MoveRandom
-                         , Transpose
                          , MoveRandom
-                         , Rotate CCW]
+                         ]
       prog' = head $ drop (fromIntegral x `mod` 4) $ iterate Program.rotate prog
-  LifeForm.new (Loc x y) prog' [ "*.*"
-                               , "*.*"
-                               , "***"
+  LifeForm.new (Loc x y) prog' [ "+.+"
+                               , "+.+"
+                               , "+++"
                                ]
 
-newU = Universe.new (Size 100 100)
+newU = Universe.new (Size 200 200)
 
 buildCritters :: HCell Universe
 buildCritters = do
-  x <- replicateM 10 $ algea N
-  y <- replicateM 10 beast
-  z <- replicateM 10 amoeba
-  w <- replicateM 10 blob
-  let critters = concat [x, y, z, w]
+  x <- replicateM 300 $ algeaPos N
+  p <- replicateM 300 $ algeaNeg N
+  c <- replicateM 30 $ beast
+  let critters = concat [x, p, c]
   foldM Universe.addLifeForm newU critters
 
 setup :: Universe -> DT.GridT ()
 setup u = do
   let (Size w h) = uSize u
-  DG.setWindowTitle "Heirarchical Cellular"
-  DG.setCellSize 10
+  DG.setWindowTitle "Localized Cellular Heirarchy"
+  DG.setCellSize 5
   DG.setWindowHeight (fromIntegral w)
   DG.setWindowWidth (fromIntegral h)
 
