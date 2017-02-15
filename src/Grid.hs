@@ -32,7 +32,7 @@ offsetGrid (Grid cells _) size@(Size w h) dx dy =
 testg = Grid cells size
   where cells = DM.fromList $ zip locs cts
         locs = [Loc 0 0, Loc 1 0, Loc 0 1, Loc 1 1]
-        cts = [WallCell NegWC, EmptyCell, Transporter, WallCell PosWC]
+        cts = [WallCell, EmptyCell, Transporter]
         size = Size 3 3
 
 transpose (Grid cells (Size w h)) = Grid diagFlip (Size h w)

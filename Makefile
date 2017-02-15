@@ -14,16 +14,17 @@ watch: ## build
 
 build:
 	stack build --ghc-options -threaded --ghc-options -eventlog --ghc-options -rtsopts
-	#stack build --ghc-options -threaded --ghc-options -rtsopts
 
-run-profile-mem:
-	stack exec hcell-exe -- +RTS -ls -N7
-	threadscope hcell-exe.eventlog
+run-profile-mem:	
+	stack build --ghc-options -debug # -threaded --ghc-options -eventlog --ghc-options -rtsopts
+	stack exec hcell-exe -- +RTS -N7
+	#threadscope hcell-exe.eventlog
 
 run-profile:
-	# stack build --executable-profiling --library-profiling 
+	stack build --executable-profiling --library-profiling 
 	stack exec hcell-exe -- +RTS
-	#hp2ps -e8in -c hcell-exe.hp
+	#stack exec hp2ps -- -e8in -c hcell-exe.hp
+
 run:
 	stack exec hcell-exe -- +RTS -N7
 

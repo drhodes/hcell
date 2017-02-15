@@ -45,7 +45,8 @@ step u@(Universe g cg s t lfs) = do
   let lifeforms = DM.elems lfs
       numforms = length lifeforms
       shuffledLife = Shuffle.shuffle' lifeforms numforms seed
-  liftM incrementTime $ foldM step1 u shuffledLife
+  stepped <- liftM incrementTime $ foldM step1 u shuffledLife
+  return stepped
 
 stepN n u = 
   if n <= 0

@@ -41,7 +41,6 @@ runCellState = runHCell newCS
 data LifeId = LifeId Integer
             deriving (Show, Eq, Ord)
 
-
 class Mass a where
   mass :: a -> Integer
 
@@ -52,19 +51,15 @@ data Loc = Loc { locX :: Integer
 data Dir = E | N | W | S
          deriving (Show, Eq, Ord, Enum)
 
-data WallCellType = PosWC
-                  | NegWC
-                  deriving (Show, Eq, Ord)
-
 data CellType = JointCell Joint
-              | WallCell WallCellType
+              | WallCell 
               | EmptyCell
               | Transporter
                 deriving (Show, Eq, Ord)
 
 instance Mass CellType where
   mass (JointCell _) = 1
-  mass (WallCell _) = 1
+  mass WallCell = 1
   mass EmptyCell = 0
   mass Transporter = 0
 
@@ -92,6 +87,9 @@ data Grid = Grid { gridCells :: !(DM.Map Loc CellType)
                  , gridSize :: !Size
                  } deriving (Show, Eq, Ord)
 
+data BoundingBox = BoundingBox Loc Loc
+
+
 instance Mass Grid where
   mass (Grid g _) = sum $ map mass (DM.elems g)
 
@@ -116,10 +114,12 @@ data Orientation = TopBottom { topOffset :: Integer
                              } 
                  | LeftRight { leftOffset :: Integer
                              , rightOffset :: Integer
-                             } deriving (Show, Eq, Ord)
+                             } 
+                 | OrientationUndetermined
+                 deriving (Show, Eq, Ord)
 
 data Joint = NonRotating Orientation
-           | Rotatating Orientation
+           | Rotating Orientation
            deriving (Show, Eq, Ord)
 
 instance Mass Joint where
@@ -158,3 +158,66 @@ data CollisionGrid = CollisionGrid { cGridSize :: Size
 -- 1 2 3
 -- 4 5 6
 -- 7 8 9
+
+
+
+
+
+{- extremely fast 2d bit array
+
+bits of a 64-bit integer.
+
+1 0 0 1 0 1 1 0
+1 0 0 1 0 0 1 0
+1 1 0 1 0 0 1 0
+1 0 0 1 0 0 1 0
+1 1 0 1 0 0 1 0
+1 1 0 1 0 0 1 0
+1 1 1 0 1 1 0 1
+1 0 1 0 1 1 1 1
+
+
+zero out the Z positions?
+
+1 0 0 1 0 1 1 0
+1 0 0 1 0 0 1 0
+1 1 0 1 0 0 1 0
+1 0 0 1 Z Z Z 0
+1 1 0 1 Z 0 Z 0
+1 1 0 1 Z Z Z 0
+1 1 1 0 1 1 0 1
+1 0 1 0 1 1 1 1
+
+first coord (4,3)
+
+00                70                E0
++-----------------+-----------------+-----------------+-----------------+
+| 1 0 0 1 0 1 1 0 | 1 0 0 1 0 1 1 0 | 1 0 0 1 0 1 1 0 | 1 0 0 1 0 1 1 0 |
+| 1 0 0 1 0 0 1 0 | 1 0 0 1 0 0 1 0 | 1 0 0 1 0 0 1 0 | 1 0 0 1 0 0 1 0 |
+| 1 1 0 1 0 0 1 0 | 1 1 0 1 0 0 1 0 | 1 1 0 1 0 0 1 0 | 1 1 0 1 0 0 1 0 |
+| 1 0 0 1 * B C 0 | 1 0 0 1 A B C 0 | 1 0 0 1 A B C 0 | 1 0 0 1 A B C 0 |
+| 1 1 0 1 D 0 E 0 | 1 1 0 1 D 0 E 0 | 1 1 0 1 D 0 E 0 | 1 1 0 1 D 0 E 0 |
+| 1 1 0 1 F G H 0 | 1 1 0 1 F G H 0 | 1 1 0 1 F G H 0 | 1 1 0 1 F G H 0 |
+| 1 1 1 0 1 1 0 1 | 1 1 1 0 1 1 0 1 | 1 1 1 0 1 1 0 1 | 1 1 1 0 1 1 0 1 |
+| 1 0 1 0 1 1 1 1 | 1 0 1 0 1 1 1 1 | 1 0 1 0 1 1 1 1 | 1 0 1 0 1 1 1 1 |
++-----------------+-----------------+-----------------+-----------------+
+| 1 0 0 1 0 1 1 0 | 1 0 0 1 0 1 1 0 | 1 0 0 1 0 1 1 0 | 1 0 0 1 0 1 1 0 |
+| 1 0 0 1 0 0 1 0 | 1 0 0 1 0 0 1 0 | 1 0 0 1 0 0 1 0 | 1 0 0 1 0 0 1 0 |
+| 1 1 0 1 0 0 1 0 | 1 1 0 1 0 0 1 0 | 1 1 0 1 0 0 1 0 | 1 1 0 1 0 0 1 0 |
+| 1 0 0 1 A B C 0 | 1 0 0 1 A B C 0 | 1 0 0 1 A B C 0 | 1 0 0 1 A B C 0 |
+| 1 1 0 1 D 0 E 0 | 1 1 0 1 D 0 E 0 | 1 1 0 1 D 0 E 0 | 1 1 0 1 D 0 E 0 |
+| 1 1 0 1 F G H 0 | 1 1 0 1 F G H 0 | 1 1 0 1 F G H 0 | 1 1 0 1 F G H 0 |
+| 1 1 1 0 1 1 0 1 | 1 1 1 0 1 1 0 1 | 1 1 1 0 1 1 0 1 | 1 1 1 0 1 1 0 1 |
+| 1 0 1 0 1 1 1 1 | 1 0 1 0 1 1 1 1 | 1 0 1 0 1 1 1 1 | 1 0 1 0 1 1 1 1 |
++-----------------+-----------------+-----------------+-----------------+
+| 1 0 0 1 0 1 1 0 | 1 0 0 1 0 1 1 0 | 1 0 0 1 0 1 1 0 | 1 0 0 1 0 1 1 0 |
+| 1 0 0 1 0 0 1 0 | 1 0 0 1 0 0 1 0 | 1 0 0 1 0 0 1 0 | 1 0 0 1 0 0 1 0 |
+| 1 1 0 1 0 0 1 0 | 1 1 0 1 0 0 1 0 | 1 1 0 1 0 0 1 0 | 1 1 0 1 0 0 1 0 |
+| 1 0 0 1 A B C 0 | 1 0 0 1 A B C 0 | 1 0 0 1 A B C 0 | 1 0 0 1 A B C 0 |
+| 1 1 0 1 D 0 E 0 | 1 1 0 1 D 0 E 0 | 1 1 0 1 D 0 E 0 | 1 1 0 1 D 0 E 0 |
+| 1 1 0 1 F G H 0 | 1 1 0 1 F G H 0 | 1 1 0 1 F G H 0 | 1 1 0 1 F G H 0 |
+| 1 1 1 0 1 1 0 1 | 1 1 1 0 1 1 0 1 | 1 1 1 0 1 1 0 1 | 1 1 1 0 1 1 0 1 |
+| 1 0 1 0 1 1 1 1 | 1 0 1 0 1 1 1 1 | 1 0 1 0 1 1 1 1 | 1 0 1 0 1 1 1 1 |
++-----------------+-----------------+-----------------+-----------------+
+
+-}

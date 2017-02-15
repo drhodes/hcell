@@ -1,0 +1,241 @@
+
+./test/Spec.hs,30
+main main0,1
+main main1,2
+
+./src/LifeForm.hs,550
+module LifeForm LifeForm3,4
+new new19,20
+new new20,21
+width width28,29
+height height29,30
+buildCell buildCell31,32
+rowCells rowCells41,42
+rowCells rowCells42,43
+buildLifeFormGrid buildLifeFormGrid44,45
+moveRandom moveRandom51,52
+step step56,57
+step step57,58
+spin spin79,80
+getNonEmptyCellLocs getNonEmptyCellLocs81,82
+size size88,89
+boundingBox boundingBox91,92
+boundingBox boundingBox92,93
+displayOne displayOne100,101
+displayOne displayOne101,102
+displayAll displayAll122,123
+displayAll displayAll123,124
+
+./src/Util.hs,192
+module Util Util2,3
+randomInt randomInt18,19
+randomInt randomInt19,20
+nextNonce nextNonce25,26
+nextNonce nextNonce26,27
+randomColor randomColor33,34
+randomColor randomColor34,35
+
+./src/CollisionGrid.hs,458
+module CollisionGrid CollisionGrid4,5
+new new21,22
+clearCell clearCell25,26
+clearCell clearCell26,27
+fillCell fillCell30,31
+fillCell fillCell31,32
+insertLifeForm insertLifeForm35,36
+insertLifeForm insertLifeForm36,37
+rmLifeForm rmLifeForm40,41
+rmLifeForm rmLifeForm41,42
+checkOutOfRange checkOutOfRange45,46
+checkOutOfRange checkOutOfRange46,47
+cellEmpty cellEmpty52,53
+doesCollide doesCollide60,61
+doesCollide doesCollide61,62
+
+./src/Color.hs,24
+module Color Color0,1
+
+./src/Lib.hs,20
+module Lib Lib1,2
+
+./src/Grid.hs,475
+module Grid Grid2,3
+new new10,11
+contains contains15,16
+contains contains16,17
+getNonEmptyCellLocs getNonEmptyCellLocs18,19
+putCell putCell21,22
+putCell putCell22,23
+offsetGrid offsetGrid26,27
+testg testg31,32
+transpose transpose37,38
+flipV flipV41,42
+rotate rotate50,51
+addLifeForm addLifeForm55,56
+addLifeForms addLifeForms61,62
+addLifeForms addLifeForms62,63
+numCells numCells65,66
+getCellAt getCellAt66,67
+hasNeighbor hasNeighbor69,70
+
+./src/Types.hs,3645
+module Types Types6,7
+type HCell HCell21,22
+type HCell b b21,22
+runExceptStateT runExceptStateT24,25
+runExceptStateT runExceptStateT25,26
+data CellState CellState27,28
+data CellState = CellState CellState27,28
+data CellState = CellState { csRand csRand27,28
+                           , csNonce csNonce28,29
+runHCell runHCell31,32
+runHCell runHCell32,33
+newCS newCS34,35
+newCS newCS35,36
+runCellState runCellState37,38
+runCellState runCellState38,39
+data LifeId LifeId40,41
+data LifeId = LifeId LifeId40,41
+class Mass Mass43,44
+class Mass Mass43,44
+  mass mass44,45
+data Loc Loc46,47
+data Loc = Loc Loc46,47
+data Loc = Loc { locX locX46,47
+               , locY locY47,48
+data Dir Dir50,51
+data Dir = E E50,51
+data Dir = E | N N50,51
+data Dir = E | N | W W50,51
+data Dir = E | N | W | SS50,51
+data CellType CellType53,54
+data CellType = JointCell JointCell53,54
+              | WallCellWallCell54,55
+              | EmptyCellEmptyCell55,56
+              | TransporterTransporter56,57
+instance instance59,60
+data Program Program65,66
+data Program = Program Program65,66
+data Rot Rot68,69
+data Rot = CCW CCW68,69
+data Rot = CCW | CW CW68,69
+data Code Code70,71
+data Code = Move Move70,71
+          | MoveRandomMoveRandom71,72
+          | Rotate Rotate72,73
+          | NOPNOP73,74
+          | PassLeftPassLeft74,75
+          | PassRightPassRight75,76
+          | PassBothPassBoth76,77
+          | FlipVFlipV77,78
+          | TransposeTranspose78,79
+data Size Size81,82
+data Size = Size Size81,82
+data Size = Size { sizeW sizeW81,82
+                 , sizeH sizeH82,83
+data Grid Grid85,86
+data Grid = Grid Grid85,86
+data Grid = Grid { gridCells gridCells85,86
+                 , gridSize gridSize86,87
+data BoundingBox BoundingBox89,90
+data BoundingBox = BoundingBox BoundingBox89,90
+data Transporter Transporter97,98
+data Transporter = Send Send97,98
+                 | Recv Recv98,99
+data Universe Universe100,101
+data Universe = Universe Universe100,101
+data Universe = Universe { uGrid uGrid100,101
+                         , uCollisionGrid uCollisionGrid101,102
+                         , uSize uSize102,103
+                         , uTime uTime103,104
+                         , uLifeForms uLifeForms104,105
+data Orientation Orientation111,112
+data Orientation = TopBottom TopBottom111,112
+data Orientation = TopBottom { topOffset topOffset111,112
+                             , bottomOffset bottomOffset112,113
+                 | LeftRight LeftRight114,115
+                 | LeftRight { leftOffset leftOffset114,115
+                             , rightOffset rightOffset115,116
+                 | OrientationUndeterminedOrientationUndetermined117,118
+data Joint Joint120,121
+data Joint = NonRotating NonRotating120,121
+           | Rotating Rotating121,122
+data LifeForm LifeForm127,128
+data LifeForm = Complex Complex127,128
+              | Simple Simple128,129
+              | Simple { simpleId simpleId128,129
+                       , simpleLoc simpleLoc129,130
+                       , simpleProg simpleProg130,131
+                       , simpleGrid simpleGrid131,132
+                       , simpleAge simpleAge132,133
+lifeFormGrid lifeFormGrid141,142
+class Draw Draw148,149
+class Draw Draw148,149
+  draw draw149,150
+data CollisionGrid CollisionGrid151,152
+data CollisionGrid = CollisionGrid CollisionGrid151,152
+data CollisionGrid = CollisionGrid { cGridSize cGridSize151,152
+                                   , cGridMap cGridMap152,153
+
+./src/Loc.hs,206
+module Loc Loc1,2
+toNorth toNorth6,7
+toEast toEast7,8
+toWest toWest8,9
+toSouth toSouth9,10
+add add11,12
+toDir toDir13,14
+randomDir randomDir20,21
+randomDir randomDir21,22
+wrap wrap25,26
+
+./src/Universe.hs,248
+module Universe Universe3,4
+new new17,18
+addLifeForm addLifeForm19,20
+step1 step124,25
+step1 step125,26
+step step40,41
+step step41,42
+stepN stepN50,51
+incrementTime incrementTime56,57
+display display59,60
+display display60,61
+
+./src/Program.hs,118
+module Program Program0,1
+new new5,6
+rotate rotate7,8
+curInstruction curInstruction11,12
+length length13,14
+
+./app/Main.hs,639
+module Main Main4,5
+algea algea16,17
+algea algea17,18
+jointCell jointCell21,22
+jointCell jointCell22,23
+amoeba amoeba27,28
+amoeba amoeba28,29
+blob blob35,36
+blob blob36,37
+randomLoc randomLoc43,44
+randomLoc randomLoc44,45
+beast beast52,53
+beast beast53,54
+newU newU76,77
+buildCritters buildCritters78,79
+buildCritters buildCritters79,80
+setup setup86,87
+setup setup87,88
+everyFrame everyFrame94,95
+everyFrame everyFrame95,96
+handleEvent handleEvent113,114
+handleEvent handleEvent114,115
+handleEvents handleEvents127,128
+handleEvents handleEvents128,129
+main main130,131
+main main131,132
+
+./Setup.hs,15
+main main1,2

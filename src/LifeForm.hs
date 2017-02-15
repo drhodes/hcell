@@ -32,10 +32,10 @@ height = sizeH . gridSize . simpleGrid
 buildCell x y char =
   let loc = Loc x y
       cell = case char of
-        '+' -> WallCell PosWC
-        '-' -> WallCell NegWC
+        '+' -> WallCell
         '.' -> EmptyCell
         't' -> Transporter
+        's' -> JointCell $ NonRotating OrientationUndetermined
         x -> error $ "LifeForm.buildCell need to implement " ++ show x
   in (loc, cell)
 
@@ -86,6 +86,16 @@ getNonEmptyCellLocs uSize Simple{..} =
 --   let (Grid cells _) = simpleGrid
 --   in (loc, DM.lookup cells loc)
 
+size Simple{..} = let (Grid _ size) = simpleGrid
+                  in size
+
+boundingBox :: LifeForm -> BoundingBox
+boundingBox s@Simple{..} = BoundingBox topLeft bottomRight
+  where (Loc left top) = simpleLoc
+        (Size w h) = size s
+        topLeft = simpleLoc
+        bottomRight = Loc (left + w) (top + h)
+
 
 
 displayOne :: LifeForm -> DT.GridT ()
@@ -100,9 +110,9 @@ displayOne s@Simple{..} = do
   
   let f (Loc x y) = do
         let color = case DM.lookup (Loc x y) cells  of
-              Just (JointCell _) -> DG.colorFromHex 0x222222FF
-              Just (WallCell PosWC) -> DG.colorFromHex 0xFF0000FF
-              Just (WallCell NegWC) -> DG.colorFromHex 0x0000FFFF
+              Just (JointCell (NonRotating _)) -> DG.colorFromHex 0x00b1feff
+              Just (JointCell (Rotating _)) -> DG.colorFromHex 0x00fe0bff
+              Just WallCell -> DG.colorFromHex 0x222222FF
               Just EmptyCell -> DG.colorFromHex 0x000000FF
               Just Transporter -> DG.colorFromHex 0x0000FFFF
               Nothing -> error "displayOne explodes because impossible happened"
